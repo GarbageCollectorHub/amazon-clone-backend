@@ -72,13 +72,14 @@ namespace AMZN.Middleware
             }
 
 
-            // Любая другая непредвиденная ошибка -> 500
+            // Все остальные ошибки -> 500, детали клиенту не отдаём
             _logger.LogError(ex,
                 "Unhandled exception: {Method} {Path}, traceId={TraceId}",
                 context.Request.Method,
                 context.Request.Path,
                 context.TraceIdentifier);
 
+            // формирует ответ клиенту
             await WriteErrorAsync(context, StatusCodes.Status500InternalServerError, new ApiErrorResponse
             {
                 Code = ErrorCodes.InternalError,

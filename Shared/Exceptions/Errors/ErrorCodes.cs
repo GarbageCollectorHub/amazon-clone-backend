@@ -1,6 +1,6 @@
 ﻿namespace AMZN.Shared.Exceptions.Errors
 {
-
+    // Коди Помилок
     public static class ErrorCodes
     {
 

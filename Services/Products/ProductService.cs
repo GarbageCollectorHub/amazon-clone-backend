@@ -87,6 +87,7 @@ namespace AMZN.Services.Products
         //  Rating
         public Task<ProductRatingResponseDto> SetRatingAsync(Guid productId, Guid userId, byte rating)
         {
+
             return _transactionManager.ExecuteAsync(async () =>
             {
                 Product product = await GetExistingProductForUpdateAsync(productId);

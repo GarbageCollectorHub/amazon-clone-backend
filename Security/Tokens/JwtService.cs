@@ -23,7 +23,7 @@ namespace AMZN.Security.Tokens
         public (string token, int expiresInSeconds) GenerateAccessToken(User user)
         {
             var keyBytes = GetJwtKeyBytes();
-            var creds = new SigningCredentials(new SymmetricSecurityKey(keyBytes), SecurityAlgorithms.HmacSha256);      // подпись JWT: HMAC-SHA256 + общий секрет (keyBytes)
+            var creds = new SigningCredentials(new SymmetricSecurityKey(keyBytes), SecurityAlgorithms.HmacSha256);      // подпись JWT: HMAC-SHA256 + секретний ключ (keyBytes)
 
             var now = DateTime.UtcNow;
             var minutes = int.TryParse(_config["Jwt:ExpiresMinutes"], out var m) ? m : 30;      // если не задано в конфиге —> 30 минут
@@ -33,8 +33,8 @@ namespace AMZN.Security.Tokens
             // claims юзера:  UserId/Email/Role
             var claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),        // sub    - ( id юзера которому выдан токен, jwt стандарт)
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),          // UserId - ( id юзера, .net claim )
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),        // subject
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),          // .NET claim
                 new Claim(ClaimTypes.Role, user.Role.ToString()),                  // Role
                 new Claim(ClaimTypes.Email, user.Email),                           // Email
 
@@ -62,14 +62,13 @@ namespace AMZN.Security.Tokens
 
         public string GenerateRefreshToken()
         {
-            // refresh token - случайная base64 строка для обновления access токена
+            // refresh token - случайная base64Url строка для обновления access токена
             return GenerateBase64UrlToken(32);
         }
 
 
         public string HashRefreshToken(string refreshToken)
         {
-            // В БД храним только хэш refresh токена (TokenHash)
             var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(refreshToken)); 
             return Convert.ToHexString(bytes);
         }
@@ -97,7 +96,7 @@ namespace AMZN.Security.Tokens
 
         private static string GenerateBase64UrlToken(int bytesLength)
         {
-            // base64url (без + / =)
+            // base64Url (без + / =)
             var bytes = RandomNumberGenerator.GetBytes(bytesLength);
 
             return Convert.ToBase64String(bytes)

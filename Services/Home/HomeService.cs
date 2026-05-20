@@ -85,7 +85,7 @@ namespace AMZN.Services.Home
             return result;
         }
 
-
+        // 2x2 блоки, категории + продукты
         private async Task<List<HomeCategoryBlockDto>> BuildCategoryBlocksAsync(List<Category> blockCategories, Dictionary<Guid, List<Category>> subcategoriesByParentId)
         {
             List<HomeCategoryBlockDto> result = new List<HomeCategoryBlockDto>();

@@ -49,7 +49,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddApiValidationErrors();      // единый формат 400 ответа для ошибок валидации DTO (ModelState)
 
 
-//  --- Swagger ---
+//  --- Swagger configuration ---
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -181,11 +181,11 @@ builder.Services.AddAmznRateLimiting();
 
 
 
-// JWT auth
+// JWT auth configuration
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        const int MinJwtKeyBytes = 32; // HS256 -> 256 bit secret
+        const int MinJwtKeyBytes = 32; // HS256(HMAC with SHA-256)  -> 256 bit secret
 
         var keyBase64 = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("Jwt:Key is missing");
 
@@ -310,10 +310,13 @@ using (var scope = app.Services.CreateScope())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
+// Для MVC перенаправляем 401/403 на кастомные страницы ошибок
 app.UseWhen(ctx => !ctx.Request.Path.StartsWithSegments("/api"), appBuilder =>
 {
     appBuilder.UseStatusCodePagesWithReExecute("/Home/AuthStatus", "?code={0}");
 });
+
 app.UseRouting();
 app.UseCors();
 

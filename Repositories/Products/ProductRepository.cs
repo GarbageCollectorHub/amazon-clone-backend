@@ -101,6 +101,7 @@ namespace AMZN.Repositories.Products
             return BuildCatalogQuery(queryParams, categoryIds).CountAsync();
         }
 
+        // Catalog Products
         public Task<List<Product>> GetCatalogProductsAsync(
             ProductListQueryParams queryParams,
             int skip,
@@ -135,6 +136,7 @@ namespace AMZN.Repositories.Products
                 .ToListAsync();
         }
 
+        // 
         private IQueryable<Product> BuildCatalogQuery(ProductListQueryParams q, List<Guid>? categoryIds)
         {
             var query = _db.Products.AsNoTracking();
@@ -249,6 +251,8 @@ namespace AMZN.Repositories.Products
             _db.ProductRatings.Add(rating);
         }
 
+
+
         // Блокирует запись в БД (product) для изменений рейтинга и отзывов внутри транзакции
         public Task<Product?> GetByIdForUpdateAsync(Guid id)
         {
@@ -256,6 +260,8 @@ namespace AMZN.Repositories.Products
                 .FromSqlInterpolated($"SELECT * FROM Products WHERE Id = {id} FOR UPDATE")
                 .FirstOrDefaultAsync();
         }
+
+
 
         public async Task<(int ratingSum, int ratingCount)> UpdateProductRatingAsync(Guid productId)
         {
