@@ -104,19 +104,19 @@ builder.Services.AddSession(options =>
 
 // MySQL DbContext
 
-builder.Services.AddDbContext<DataContext>(options => options
-    .UseMySql(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
-        ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection")),
-        mySqlOptions => mySqlOptions.CommandTimeout(30)
-    ));
+//builder.Services.AddDbContext<DataContext>(options => options
+//    .UseMySql(
+//        builder.Configuration.GetConnectionString("DefaultConnection"),
+//        ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection")),
+//        mySqlOptions => mySqlOptions.CommandTimeout(30)
+//    ));
 
 
-/*
-builder.Services.AddDbContext<DataContext>(options => 
-    options.UseSqlServer(builder.Configuration.GetConnectionString("LocalMS"),
+
+builder.Services.AddDbContext<DataContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
         sqlOptions => sqlOptions.CommandTimeout(30)));
-*/
+
 
 //  Cors
 builder.Services.AddCors(options =>

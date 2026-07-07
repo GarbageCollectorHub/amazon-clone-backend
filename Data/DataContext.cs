@@ -307,7 +307,7 @@ public class DataContext: DbContext
             .HasOne(ci => ci.Product)
             .WithMany()
             .HasForeignKey(ci => ci.ProductId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Cart>()
             .HasOne(c => c.User)
@@ -326,12 +326,12 @@ public class DataContext: DbContext
             o.HasOne(x => x.DeliveryAddress)
                 .WithMany()
                 .HasForeignKey(x => x.DeliveryAddressId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.NoAction);
 
             o.HasOne(x => x.PaymentMethod)
                 .WithMany()
                 .HasForeignKey(x => x.PaymentMethodId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.NoAction);
 
             o.Property(x => x.TotalAmount).HasColumnType("decimal(18,2)");
 
