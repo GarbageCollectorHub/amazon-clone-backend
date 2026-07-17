@@ -1,48 +1,34 @@
-﻿using System.ComponentModel;
-using AMZN.Data;
-using AMZN.Data.Entities;
-using AMZN.Models;
+using AMZN.DTOs.Auth;
 using AMZN.Models.Action;
 using AMZN.Models.Category;
 using AMZN.Models.User;
-using AMZN.Security.Passwords;
 using AMZN.Services.Admin;
-using AMZN.Services.Storage.Cloud;
-using AMZN.Services.Storage.Local;
+using AMZN.Services.Auth;
+using AMZN.Shared.Exceptions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Azure.Storage.Blobs;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace AMZN.Controllers;
 
 public class AdminController : Controller
 {
-    private readonly DataContext _dataContext;
-    private readonly IPasswordHasher _passwordHasher;
-    private readonly FormsValidators _formsValidator;
-    private readonly DataAccessor _dataAccessor;
-    private readonly ILocalsStorageService _localsStorageService;
-    private readonly ICloudStorageService _cloudStorageService;
-    private readonly AdminCategoryService _adminCategoryService;
+    private const string AccessTokenCookieName = "amzn_access";
+    private const string RefreshTokenCookieName = "amzn_refresh";
+
+    private readonly IAuthService _authService;
+    private readonly ILogger<AdminController> _logger;
     private readonly AdminUserService _adminUserService;
     private readonly AdminActionService _adminActionService;
-    
-    public AdminController(DataContext dataContext,
-        IPasswordHasher passwordHasher,
-        FormsValidators formsValidator,
-        DataAccessor dataAccessor,
-        ILocalsStorageService localsStorageService,
-        ICloudStorageService cloudStorageService,
-        AdminCategoryService adminCategoryService,
+
+    public AdminController(
+        IAuthService authService,
+        ILogger<AdminController> logger,
         AdminUserService adminUserService,
         AdminActionService adminActionService)
     {
-        _dataContext = dataContext;
-        _passwordHasher = passwordHasher;
-        _formsValidator = formsValidator;
-        _dataAccessor = dataAccessor;
-        _localsStorageService = localsStorageService;
-        _cloudStorageService = cloudStorageService;
-        _adminCategoryService = adminCategoryService;
+        _authService = authService;
+        _logger = logger;
         _adminUserService = adminUserService;
         _adminActionService = adminActionService;
     }
@@ -64,54 +50,85 @@ public class AdminController : Controller
         {
             return Json(new { success = false, message = "Form model is null" });
         }
-        
+
         (bool success, object message) = await _adminUserService.RegisterUser(model);
         return Json(new { success, message });
     }
-    
-    public IActionResult Login()
+
+    [HttpPost]
+    [AllowAnonymous]
+    [ValidateAntiForgeryToken]
+    [EnableRateLimiting("Auth")]
+    public async Task<JsonResult> Login([FromForm] LoginRequestDto? request)
     {
-        UserRefreshToken token;
+        if (request == null || !ModelState.IsValid)
+        {
+            Response.StatusCode = StatusCodes.Status400BadRequest;
+            return Json(new
+            {
+                status = StatusCodes.Status400BadRequest,
+                message = "Email and password are required"
+            });
+        }
+
         try
         {
-            token = _dataAccessor.Authenticate(Request);
+            AuthResponseDto response = await _authService.LoginAsync(request);
+            SetAuthCookies(response);
+
+            TempData["Success"] = "Signed in successfully!";
+            return Json(new { status = StatusCodes.Status200OK, message = "OK" });
         }
-        catch (Win32Exception e)
+        catch (ApiException exception)
         {
-            return Json(new { status = e.ErrorCode, message = e.Message });
+            Response.StatusCode = exception.StatusCode;
+            return Json(new { status = exception.StatusCode, message = exception.Message });
         }
-        
-        HttpContext.Session.SetString("userId", token.UserId.ToString());
-        TempData["Success"] = "Signed in successfully!";
-        return Json(new { status = 200, message = "OK" });
     }
 
-    public IActionResult Category()
+    [HttpPost]
+    [AllowAnonymous]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Logout()
+    {
+        string? refreshToken = Request.Cookies[RefreshTokenCookieName];
+        try
+        {
+            await _authService.RevokeRefreshTokenAsync(refreshToken);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(exception, "Failed to revoke refresh token during MVC logout");
+        }
+
+        DeleteAuthCookies();
+        TempData["Success"] = "Signed out successfully!";
+        return RedirectToAction("Index", "Home");
+    }
+
+    public IActionResult Category([FromServices] AdminCategoryService adminCategoryService)
     {
         CategoryViewModel viewModel = new()
         {
-            Categories = _adminCategoryService.GetAll()
+            Categories = adminCategoryService.GetAll()
         };
         return View(viewModel);
     }
-    
+
     [HttpPost]
-    public async Task<JsonResult> AddCategory(CategoryFormModel? model)
+    public async Task<JsonResult> AddCategory(
+        CategoryFormModel? model,
+        [FromServices] AdminCategoryService adminCategoryService)
     {
         if (model == null)
         {
             return Json(new { success = false, message = "Form model is null" });
         }
 
-        (bool success, object message) = await _adminCategoryService.AddCategoryAsync(model);
+        (bool success, object message) = await adminCategoryService.AddCategoryAsync(model);
         return Json(new { success, message });
     }
 
-    public FileResult Image([FromRoute] string id)
-    {
-        return File(System.IO.File.ReadAllBytes(_localsStorageService.GetRealPath(id)), "image/jpeg");
-    }
-    
     public IActionResult Action()
     {
         ActionViewModel viewModel = new();
@@ -129,5 +146,43 @@ public class AdminController : Controller
         (bool success, object message) = _adminActionService.AddAction(model);
         return Json(new { success, message });
     }
-    
+
+    private void SetAuthCookies(AuthResponseDto response)
+    {
+        Response.Cookies.Append(
+            AccessTokenCookieName,
+            response.AccessToken,
+            CreateCookieOptions(TimeSpan.FromSeconds(response.ExpiresInSeconds)));
+
+        Response.Cookies.Append(
+            RefreshTokenCookieName,
+            response.RefreshToken,
+            CreateCookieOptions(TimeSpan.FromSeconds(response.RefreshExpiresInSeconds)));
+    }
+
+    private CookieOptions CreateCookieOptions(TimeSpan maxAge)
+    {
+        return new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = Request.IsHttps,
+            SameSite = SameSiteMode.Lax,
+            IsEssential = true,
+            Path = "/",
+            MaxAge = maxAge
+        };
+    }
+
+    private void DeleteAuthCookies()
+    {
+        var options = new CookieOptions
+        {
+            Secure = Request.IsHttps,
+            SameSite = SameSiteMode.Lax,
+            Path = "/"
+        };
+
+        Response.Cookies.Delete(AccessTokenCookieName, options);
+        Response.Cookies.Delete(RefreshTokenCookieName, options);
+    }
 }

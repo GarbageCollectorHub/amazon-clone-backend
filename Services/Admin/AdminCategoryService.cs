@@ -3,24 +3,20 @@ using AMZN.Models;
 using AMZN.Models.Category;
 using AMZN.Repositories.Categories;
 using AMZN.Services.Storage.Cloud;
-using AMZN.Services.Storage.Local;
 
 namespace AMZN.Services.Admin;
 
 public class AdminCategoryService
 {
     private readonly ICategoryRepository _categoryRepository;
-    private readonly ILocalsStorageService _localStorageService;
     private readonly FormsValidators _formsValidator;
     private readonly ICloudStorageService _cloudStorageService;
     
     public AdminCategoryService(ICategoryRepository categoryRepository, 
-        ILocalsStorageService localStorageService, 
         FormsValidators formsValidator, 
         ICloudStorageService cloudStorageService)
     {
         _categoryRepository = categoryRepository;
-        _localStorageService = localStorageService;
         _formsValidator = formsValidator;
         _cloudStorageService = cloudStorageService;
     }
@@ -42,7 +38,6 @@ public class AdminCategoryService
                 Id = id,
                 Name = formModel.Name,
                 Description = formModel.Description,
-                //ImageUrl = _localStorageService.SaveFile(model.Image),
                 ImageUrl = await _cloudStorageService.SaveImageAsync(formModel.Image),
                 CreatedAt = DateTime.UtcNow,
             };

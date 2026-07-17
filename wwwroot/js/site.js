@@ -52,10 +52,6 @@ document.addEventListener("submit", e => {
     if (form.id === "auth-modal-form") {
         e.preventDefault();
 
-        const email = form.querySelector("[name='AuthEmail']").value;
-        const password = form.querySelector("[name='AuthPassword']").value;
-        const credentials = btoa(email + ':' + password);
-
         const messageEl = document.getElementById("message");
         const submitBtn = document.querySelector('[form="auth-modal-form"][type="submit"]');
 
@@ -64,7 +60,7 @@ document.addEventListener("submit", e => {
 
         fetch("/Admin/Login", {
             method: 'POST',
-            headers: { 'Authorization': 'Bearer ' + credentials }
+            body: new FormData(form)
         })
             .then(r => r.json())
             .then(j => {

@@ -3,7 +3,7 @@
 @{
     ViewData["Title"] = "Add action";
 
-    bool isAuthorized = Context.Items.ContainsKey("auth");
+    bool isAuthorized = Context.User.Identity?.IsAuthenticated == true;
     string? role = Context.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
 }
 

@@ -1,9 +1,9 @@
 @using System.Security.Claims
 @{
-    bool isAuthorized = Context.Items.ContainsKey("auth");
-    string? userName = Context.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
-    char? firstLetter = userName?[0];
-    string? userId = Context.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Sid)?.Value;
+    bool isAuthorized = Context.User.Identity?.IsAuthenticated == true;
+    string? userName = Context.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
+    char? firstLetter = string.IsNullOrWhiteSpace(userName) ? null : char.ToUpperInvariant(userName[0]);
+    string? userId = Context.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -81,7 +81,9 @@
                         @if (isAuthorized)
                         {
                             <span class="auth-letter" data-auth-ua-id="@userId" title="@userName" style="margin: 0.5em">@firstLetter</span>
-                            <a class="nav-link text-body" href="?logout" style="margin: 0.5em">Logout</a>
+                            <form asp-controller="Admin" asp-action="Logout" method="post" class="d-inline">
+                                <button type="submit" class="nav-link text-body border-0 bg-transparent" style="margin: 0.5em">Logout</button>
+                            </form>
                         }
                         else
                         {
@@ -123,13 +125,14 @@
 
                 <div class="modal-body">
                     <form id="auth-modal-form">
+                        @Html.AntiForgeryToken()
                         <div class="mb-3">
                             <span class="input-group-text" id="AuthLogin-addon">
                                 <i class="bi bi-box-arrow-in-right"></i>
                             </span>
                             <input type="email"
                                    class="form-control"
-                                   name="AuthEmail"
+                                   name="Email"
                                    placeholder="Email"
                                    aria-label="AuthEmail"
                                    aria-describedby="AuthEmail-addon">
@@ -141,7 +144,7 @@
                             </span>
                             <input type="password"
                                    class="form-control"
-                                   name="AuthPassword"
+                                   name="Password"
                                    placeholder="Password"
                                    aria-label="AuthPassword"
                                    aria-describedby="AuthPassword-addon">

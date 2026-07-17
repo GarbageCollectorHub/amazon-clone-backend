@@ -22,7 +22,6 @@ using AMZN.Services.Products;
 using AMZN.Services.Products.Questions;
 using AMZN.Services.Search;
 using AMZN.Services.Storage.Cloud;
-using AMZN.Services.Storage.Local;
 using AMZN.Shared.Transactions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -45,7 +44,6 @@ builder.Configuration.AddJsonFile("appsettings-Secrets.json", optional: true, re
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
-builder.Services.AddHttpContextAccessor();
 builder.Services.AddApiValidationErrors();      // единый формат 400 ответа для ошибок валидации DTO (ModelState)
 
 
@@ -93,15 +91,6 @@ builder.Services.AddSwaggerExamplesFromAssemblyOf<Program>();
 // -----------------------------------------------
 
 
-builder.Services.AddDistributedMemoryCache();
-builder.Services.AddSession(options =>
-{
-    options.IdleTimeout = TimeSpan.FromMinutes(10);
-    options.Cookie.HttpOnly = true;
-    options.Cookie.IsEssential = true;
-});
-
-
 // MySQL DbContext
 
 //builder.Services.AddDbContext<DataContext>(options => options
@@ -137,7 +126,6 @@ builder.Services.AddCors(options =>
 
 // DI services
 builder.Services.AddScoped<FormsValidators>();
-builder.Services.AddScoped<DataAccessor>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -170,7 +158,6 @@ builder.Services.AddScoped<OrderService>();
 builder.Services.AddScoped<ISearchRepository, SearchRepository>();
 builder.Services.AddScoped<SearchService>();
 // Storage
-builder.Services.AddSingleton<ILocalsStorageService, LocalStorageService>();
 builder.Services.AddSingleton<ICloudStorageService, CloudStorageService>();
 
 // EF TransactionManager
@@ -223,7 +210,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             OnMessageReceived = context =>
             {
-                if (!string.IsNullOrWhiteSpace(context.Token))
+                string authorization = context.Request.Headers.Authorization.ToString();
+                if (!string.IsNullOrWhiteSpace(authorization))
                 {
                     return Task.CompletedTask;
                 }
@@ -321,13 +309,6 @@ app.UseRouting();
 app.UseCors();
 
 app.UseAuthentication();
-app.UseWhen(context => !context.Request.Path.StartsWithSegments("/api"), appBuilder =>
-{
-    appBuilder.UseSession();
-    appBuilder.UseAuthToken();
-    appBuilder.UseAuthSession();
-});
-
 app.UseAuthorization();
 
 app.UseAmznRateLimiting();

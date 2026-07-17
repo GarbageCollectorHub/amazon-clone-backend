@@ -7,5 +7,6 @@ namespace AMZN.Services.Auth
         Task<AuthResponseDto> RegisterAsync(RegisterRequestDto dto);
         Task<AuthResponseDto> LoginAsync(LoginRequestDto dto);
         Task<AuthResponseDto> RefreshAsync(RefreshRequestDto dto);
+        Task RevokeRefreshTokenAsync(string? refreshToken);
     }
 }

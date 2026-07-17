@@ -116,6 +116,22 @@ namespace AMZN.Services.Auth
         }
 
 
+        public async Task RevokeRefreshTokenAsync(string? refreshToken)
+        {
+            if (string.IsNullOrWhiteSpace(refreshToken))
+                return;
+
+            string tokenHash = _jwt.HashRefreshToken(refreshToken.Trim());
+            UserRefreshToken? storedToken = await _refreshTokens.GetValidByHashAsync(tokenHash);
+
+            if (storedToken == null)
+                return;
+
+            await _refreshTokens.RevokeAsync(storedToken);
+            _logger.LogInformation("Refresh token revoked: userId={UserId}", storedToken.UserId);
+        }
+
+
 
 
         private static string NormalizeEmail(string email)
@@ -164,6 +180,7 @@ namespace AMZN.Services.Auth
                 AccessToken = accessToken,
                 ExpiresInSeconds = expiresInSeconds,
                 RefreshToken = refreshToken,
+                RefreshExpiresInSeconds = (int)TimeSpan.FromDays(refreshDays).TotalSeconds,
                 TokenType = "Bearer",
                 User = user.ToResponseDto()
             };
