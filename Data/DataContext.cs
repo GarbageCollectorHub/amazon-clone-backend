@@ -44,10 +44,7 @@ public class DataContext: DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        if (Database.ProviderName?.Contains("SqlServer") == true)
-        {
-            modelBuilder.HasDefaultSchema("AMZN");
-        }
+        modelBuilder.HasDefaultSchema("AMZN");
 
 
         modelBuilder.Entity<User>(u =>

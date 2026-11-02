@@ -6,6 +6,7 @@ using AMZN.Security.Tokens;
 using AMZN.Shared.Exceptions;
 using AMZN.Shared.Exceptions.Errors;
 using AMZN.Shared.Mapping;
+using AMZN.Shared.Transactions;
 
 namespace AMZN.Services.Auth
 {
@@ -23,6 +24,7 @@ namespace AMZN.Services.Auth
         private readonly IJwtService _jwt;
         private readonly IConfiguration _config;
         private readonly ILogger<AuthService> _logger;
+        private readonly ITransactionManager _transactionManager;
 
 
         public AuthService(
@@ -31,7 +33,8 @@ namespace AMZN.Services.Auth
             IPasswordHasher passwordHasher,
             IJwtService jwt,
             IConfiguration config,
-            ILogger<AuthService> logger)
+            ILogger<AuthService> logger,
+            ITransactionManager transactionManager)
         {
             _users = users;
             _refreshTokens = refreshTokens;
@@ -39,6 +42,7 @@ namespace AMZN.Services.Auth
             _jwt = jwt;
             _config = config;
             _logger = logger;
+            _transactionManager = transactionManager;
         }
 
         public async Task<AuthResponseDto> RegisterAsync(RegisterRequestDto dto)
@@ -102,17 +106,20 @@ namespace AMZN.Services.Auth
             string refreshToken = dto.RefreshToken.Trim();
             string tokenHash = _jwt.HashRefreshToken(refreshToken);
 
-            UserRefreshToken? storedToken = await _refreshTokens.GetValidByHashAsync(tokenHash);
-            if (storedToken == null)
+            return await _transactionManager.ExecuteAsync(async () =>
             {
-                _logger.LogWarning("Refresh failed: invalid refresh token");
-                throw new ApiException(ErrorCodes.AuthInvalidRefreshToken, "Invalid refresh token", StatusCodes.Status401Unauthorized);
-            }
+                UserRefreshToken? storedToken = await _refreshTokens.GetValidByHashAsync(tokenHash);
+                if (storedToken == null || !await _refreshTokens.TryRevokeAsync(tokenHash))
+                {
+                    _logger.LogWarning("Refresh failed: invalid refresh token");
+                    throw new ApiException(ErrorCodes.AuthInvalidRefreshToken, "Invalid refresh token", StatusCodes.Status401Unauthorized);
+                }
 
-            await _refreshTokens.RevokeAsync(storedToken);
-            _logger.LogInformation("Refresh success: userId={UserId}", storedToken.UserId);
+                AuthResponseDto response = await IssueTokenPairAsync(storedToken.User);
+                _logger.LogInformation("Refresh success: userId={UserId}", storedToken.UserId);
 
-            return await IssueTokenPairAsync(storedToken.User);
+                return response;
+            });
         }
 
 
@@ -122,13 +129,7 @@ namespace AMZN.Services.Auth
                 return;
 
             string tokenHash = _jwt.HashRefreshToken(refreshToken.Trim());
-            UserRefreshToken? storedToken = await _refreshTokens.GetValidByHashAsync(tokenHash);
-
-            if (storedToken == null)
-                return;
-
-            await _refreshTokens.RevokeAsync(storedToken);
-            _logger.LogInformation("Refresh token revoked: userId={UserId}", storedToken.UserId);
+            await _refreshTokens.TryRevokeAsync(tokenHash);
         }
 
 

@@ -45,36 +45,32 @@ namespace AMZN.Repositories.Products.Questions
             if (questionIds.Count == 0 || takePerQuestion <= 0)
                 return new Dictionary<Guid, List<ProductQuestionAnswerDto>>();
 
-            var previewAnswerItems = await _db.ProductQuestionAnswers
+            var previews = await _db.ProductQuestions
                 .AsNoTracking()
-                .Where(x => questionIds.Contains(x.QuestionId))
-                .OrderBy(x => x.QuestionId)
-                .ThenBy(x => x.CreatedAt)
-                .ThenBy(x => x.Id)
-                .Select(x => new
+                .Where(q => questionIds.Contains(q.Id))
+                .Select(q => new
                 {
-                    x.QuestionId,
-                    Dto = new ProductQuestionAnswerDto
-                    {
-                        Id = x.Id,
-                        Text = x.Text,
-                        AuthorName = x.User.FirstName + " " + x.User.LastName,
-                        IsSellerAnswer = x.UserId == x.Question.Product.SellerId,
-                        CreatedAt = x.CreatedAt,
-                        UpdatedAt = x.UpdatedAt
-                    }
+                    QuestionId = q.Id,
+                    Answers = q.Answers
+                        .OrderBy(x => x.CreatedAt)
+                        .ThenBy(x => x.Id)
+                        .Take(takePerQuestion)
+                        .Select(x => new ProductQuestionAnswerDto
+                        {
+                            Id = x.Id,
+                            Text = x.Text,
+                            AuthorName = x.User.FirstName + " " + x.User.LastName,
+                            IsSellerAnswer = x.UserId == x.Question.Product.SellerId,
+                            CreatedAt = x.CreatedAt,
+                            UpdatedAt = x.UpdatedAt
+                        })
+                        .ToList()
                 })
                 .ToListAsync();
 
-            return previewAnswerItems
-                .GroupBy(x => x.QuestionId)
-                .ToDictionary(
-                    g => g.Key,
-                    g => g
-                        .Take(takePerQuestion)
-                        .Select(x => x.Dto)
-                        .ToList()
-                );
+            return previews
+                .Where(x => x.Answers.Count > 0)
+                .ToDictionary(x => x.QuestionId, x => x.Answers);
         }
 
         public Task<ProductQuestionDto?> GetQuestionDtoByIdAsync(Guid productId, Guid questionId)

@@ -36,6 +36,13 @@ namespace AMZN.Repositories.Users
             return await _db.Users.FirstOrDefaultAsync(x => x.Id == id);
         }
 
+        public Task<User?> GetByIdForUpdateAsync(Guid id)
+        {
+            return _db.Users
+                .FromSqlInterpolated($"SELECT * FROM [AMZN].[Users] WITH (UPDLOCK, ROWLOCK) WHERE Id = {id}")
+                .FirstOrDefaultAsync();
+        }
+
         public async Task UpdateUserAsync(User user)
         {
             _db.Users.Update(user);

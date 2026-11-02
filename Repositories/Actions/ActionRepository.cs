@@ -63,6 +63,7 @@ public class ActionRepository : IActionRepository
                     product.CurrentPrice = (decimal)product.OriginalPrice * (decimal)((100 - action.Amount) * 0.01);
                 }
                 _dataContext.Products.Update(product);
+                action.IsApplied = true;
                 _dataContext.SaveChanges();
             }
         }
@@ -92,6 +93,7 @@ public class ActionRepository : IActionRepository
                         }
                         _dataContext.Products.Update(product);
                     }
+                    action.IsApplied = true;
                     _dataContext.SaveChanges();
                 }
             }
@@ -111,9 +113,10 @@ public class ActionRepository : IActionRepository
                     product.CurrentPrice = (decimal)product.OriginalPrice;
                     product.OriginalPrice = null;
                     _dataContext.Products.Update(product);
-                    _dataContext.SaveChanges();
                 }
             }
+            action.IsApplied = false;
+            _dataContext.SaveChanges();
         }
     }
 
@@ -137,15 +140,17 @@ public class ActionRepository : IActionRepository
                             _dataContext.Products.Update(product);
                         }
                     }
-                    _dataContext.SaveChanges();
                 }
             }
+            action.IsApplied = false;
+            _dataContext.SaveChanges();
         }
     }
 
     public bool IsValid(Action action)
     {
-        return action.EndDate > DateTime.Now;
+        DateTime now = DateTime.UtcNow;
+        return action.StartDate <= now && action.EndDate > now;
     }
 
     public List<Action> GetActions()

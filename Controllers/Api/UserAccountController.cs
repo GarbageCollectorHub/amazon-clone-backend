@@ -37,7 +37,7 @@ public class UserAccountController : ControllerBase
     
     // POST api/user/delete
     
-    [HttpGet("delete")]
+    [HttpPost("delete")]
     [Authorize]
     [EnableRateLimiting("Auth")]
     public async Task<ActionResult> DeleteUser()
@@ -59,7 +59,7 @@ public class UserAccountController : ControllerBase
         return StatusCode(StatusCodes.Status200OK, response);
     }
     
-    // POST api/user/getPaymentMethods
+    // GET api/user/getPaymentMethods
     [HttpGet("getPaymentMethods")]
     [Authorize]
     [EnableRateLimiting("Auth")]
@@ -82,7 +82,7 @@ public class UserAccountController : ControllerBase
         return StatusCode(StatusCodes.Status200OK, response);
     }
     
-    // POST api/user/getDeliveryAddresses
+    // GET api/user/getDeliveryAddresses
     [HttpGet("getDeliveryAddresses")]
     [Authorize]
     [EnableRateLimiting("Auth")]

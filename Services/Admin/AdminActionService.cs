@@ -70,11 +70,25 @@ public class AdminActionService
 
     public void CheckActionsValidity()
     {
-        var actions = _actions.GetActions().Where(a => a.EndDate < DateTime.UtcNow);
-        foreach (var action in actions)
+        var actions = _actions.GetActions()
+            .OrderBy(a => a.CreatedAt)
+            .ThenBy(a => a.Id)
+            .ToList();
+        var inactiveActions = actions.Where(a => a.IsApplied && !_actions.IsValid(a)).ToList();
+
+        foreach (var action in inactiveActions)
         {
             _actions.RemoveProductAction(action);
             _actions.RemoveCategoryAction(action);
+        }
+
+        foreach (var action in actions.Where(a => _actions.IsValid(a)))
+        {
+            if (!action.IsApplied || inactiveActions.Count > 0)
+            {
+                _actions.ApplyProductAction(action);
+                _actions.ApplyCategoryAction(action);
+            }
         }
     }
 }

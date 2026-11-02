@@ -41,7 +41,7 @@ public class CartController : ControllerBase
     }
     
     // POST api/cart/clear
-    [HttpGet("clear")]
+    [HttpPost("clear")]
     [Authorize]
     [EnableRateLimiting("Auth")]
     public async Task<ActionResult<CartResponseDto>> ClearCart()

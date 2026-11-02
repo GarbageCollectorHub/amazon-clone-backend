@@ -20,7 +20,7 @@ public class OrderController : ControllerBase
     }
     
     // POST api/order/create
-    [HttpGet("create")]
+    [HttpPost("create")]
     [Authorize]
     public async Task<ActionResult<OrderDto>> Checkout()
     {
@@ -30,7 +30,7 @@ public class OrderController : ControllerBase
     }
     
     // POST api/order/update
-    [HttpGet("update")]
+    [HttpPost("update")]
     [Authorize]
     public async Task<ActionResult<OrderDto>> UpdateOrder()
     {
@@ -59,7 +59,7 @@ public class OrderController : ControllerBase
     }
     
     // POST api/order/cancel
-    [HttpGet("cancel")]
+    [HttpPost("cancel")]
     [Authorize]
     public async Task<ActionResult<CompletedOrderDto>> CancelOrder()
     {
@@ -68,7 +68,7 @@ public class OrderController : ControllerBase
         return StatusCode(StatusCodes.Status200OK, response);
     }
     
-    // POST api/order/getOrders
+    // GET api/order/getOrders
     [HttpGet("getOrders")]
     [Authorize]
     public async Task<ActionResult<List<CompletedOrderDto>>> GetOrders()

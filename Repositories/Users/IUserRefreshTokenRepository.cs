@@ -6,7 +6,7 @@ namespace AMZN.Repositories.Users
     {
         Task AddRefreshTokenAsync(UserRefreshToken token);
         Task<UserRefreshToken?> GetValidByHashAsync(string tokenHash);
-        Task RevokeAsync(UserRefreshToken token);
+        Task<bool> TryRevokeAsync(string tokenHash);
 
 
     }

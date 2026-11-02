@@ -91,17 +91,6 @@ builder.Services.AddSwaggerExamplesFromAssemblyOf<Program>();
 // -----------------------------------------------
 
 
-// MySQL DbContext
-
-//builder.Services.AddDbContext<DataContext>(options => options
-//    .UseMySql(
-//        builder.Configuration.GetConnectionString("DefaultConnection"),
-//        ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection")),
-//        mySqlOptions => mySqlOptions.CommandTimeout(30)
-//    ));
-
-
-
 builder.Services.AddDbContext<DataContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
         sqlOptions => sqlOptions.CommandTimeout(30)));
@@ -145,6 +134,7 @@ builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<AdminProductService>();
 builder.Services.AddScoped<IActionRepository, ActionRepository>();
 builder.Services.AddScoped<AdminActionService>();
+builder.Services.AddHostedService<ActionValidityWorker>();
 builder.Services.AddScoped<IBrandRepository, BrandRepository>();
 builder.Services.AddScoped<BrandService>();
 builder.Services.AddScoped<CategoryService>();
@@ -279,21 +269,6 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
-}
-
-// Action validity check + cart creation
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    var checker = services.GetRequiredService<AdminActionService>();
-    checker.CheckActionsValidity();
-}
-
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    var cartChecker = services.GetRequiredService<CartService>();
-    //await cartChecker.CreateCartsIfNotExist();
 }
 
 app.UseHttpsRedirection();

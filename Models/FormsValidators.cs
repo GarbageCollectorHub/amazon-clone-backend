@@ -243,12 +243,12 @@ public class FormsValidators
                 errors.Add("endDate", "End date is required");
             }
 
-            if (formModel.StartDate > formModel.EndDate)
+            else if (formModel.StartDate >= formModel.EndDate)
             {
                 errors.Add("endDate", "End date must be after start date");
             }
 
-            if (formModel.EndDate < DateTime.Now)
+            else if (formModel.EndDate <= DateTime.UtcNow)
             {
                 errors.Add("endDate", "End date must be in the future");
             }

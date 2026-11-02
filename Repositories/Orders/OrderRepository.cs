@@ -43,11 +43,8 @@ public class OrderRepository : IOrderRepository
 
     public async Task RemoveOrderItemsAsync(Order order)
     {
-        foreach (var orderItem in order.OrderItems)
-        {
-            order.OrderItems.Remove(orderItem);
-            _dataContext.OrderItems.Remove(orderItem);
-        }
+        _dataContext.OrderItems.RemoveRange(order.OrderItems);
+        order.OrderItems.Clear();
         await _dataContext.SaveChangesAsync();
     }
     

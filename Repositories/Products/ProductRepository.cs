@@ -257,7 +257,7 @@ namespace AMZN.Repositories.Products
         public Task<Product?> GetByIdForUpdateAsync(Guid id)
         {
             return _db.Products
-                .FromSqlInterpolated($"SELECT * FROM Products WHERE Id = {id} FOR UPDATE")
+                .FromSqlInterpolated($"SELECT * FROM [AMZN].[Products] WITH (UPDLOCK, ROWLOCK) WHERE Id = {id}")
                 .FirstOrDefaultAsync();
         }
 

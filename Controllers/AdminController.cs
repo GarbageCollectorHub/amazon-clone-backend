@@ -71,6 +71,7 @@ public class AdminController : Controller
             });
         }
 
+
         try
         {
             AuthResponseDto response = await _authService.LoginAsync(request);
@@ -106,6 +107,7 @@ public class AdminController : Controller
         return RedirectToAction("Index", "Home");
     }
 
+    [Authorize(Roles = "Admin")]
     public IActionResult Category([FromServices] AdminCategoryService adminCategoryService)
     {
         CategoryViewModel viewModel = new()
@@ -116,6 +118,8 @@ public class AdminController : Controller
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
+    [ValidateAntiForgeryToken]
     public async Task<JsonResult> AddCategory(
         CategoryFormModel? model,
         [FromServices] AdminCategoryService adminCategoryService)
@@ -129,6 +133,7 @@ public class AdminController : Controller
         return Json(new { success, message });
     }
 
+    [Authorize(Roles = "Admin")]
     public IActionResult Action()
     {
         ActionViewModel viewModel = new();
@@ -136,6 +141,8 @@ public class AdminController : Controller
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
+    [ValidateAntiForgeryToken]
     public JsonResult AddAction(ActionFormModel? model)
     {
         if (model == null)

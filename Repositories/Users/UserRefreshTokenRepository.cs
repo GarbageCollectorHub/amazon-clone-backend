@@ -30,10 +30,13 @@ namespace AMZN.Repositories.Users
                     x.ExpiresAt > DateTime.UtcNow);
         }
 
-        public async Task RevokeAsync(UserRefreshToken token)
+        public async Task<bool> TryRevokeAsync(string tokenHash)
         {
-            token.IsRevoked = true;
-            await _db.SaveChangesAsync();
+            int affectedRows = await _db.UserRefreshTokens
+                .Where(x => x.TokenHash == tokenHash && !x.IsRevoked && x.ExpiresAt > DateTime.UtcNow)
+                .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.IsRevoked, true));
+
+            return affectedRows == 1;
         }
     }
 }

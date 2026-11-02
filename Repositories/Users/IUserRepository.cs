@@ -9,6 +9,7 @@ namespace AMZN.Repositories.Users
         Task<User?> GetByEmailAsync(string email);
         
         Task<User?> GetUserByIdAsync(Guid id);
+        Task<User?> GetByIdForUpdateAsync(Guid id);
         
         Task UpdateUserAsync(User user);
         
