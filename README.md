@@ -1,18 +1,23 @@
-# AMZN - E-commerce Backend
+# AMZN
 
-An Amazon-inspired e-commerce backend built with ASP.NET Core, Entity Framework Core and SQL Server. It provides a REST API for a separate React storefront and a responsive MVC interface for catalog management.
+E-commerce API and Management Portal
 
-Built collaboratively by three frontend developers and two backend developers, following a shared Figma design. This repository contains the backend and MVC management interface; the storefront is maintained separately.
+An Amazon-inspired e-commerce backend built with ASP.NET Core, Entity Framework Core and SQL Server. It includes a REST API for a React storefront and a responsive MVC interface for managing the catalog.
+
+The project was built by a team of three frontend and two backend developers using a shared Figma design. This repository contains the backend and MVC management interface. The React storefront is in a separate repository.
 
 ## My contribution
 
-My primary responsibility was the backend core, including:
+My main areas of responsibility were the backend API, data access and MVC product management.
 
-- Core API structure, service and repository layers, and Entity Framework Core data access.
-- JWT authentication, password hashing, and refresh-token handling.
-- Product catalog, filtering, sorting, pagination, search suggestions, and homepage APIs.
-- Product ratings, reviews, and questions and answers.
-- Product management, image galleries, and Azure Blob Storage integration.
+- Built the main API layers using controllers, services, repositories and EF Core, with shared DTOs and centralized error handling.
+- Developed the catalog API with category, brand, price and rating filters, pagination and multiple sorting options. Category selection includes subcategories and updates the available brand filters.
+- Implemented catalog search and search suggestions for products, categories and brands, with more exact matches shown first.
+- Built homepage APIs for product and category sections, including popular products and recently viewed items.
+- Implemented JWT authentication with access and refresh tokens, BCrypt password hashing and rate limiting for authentication endpoints.
+- Added product ratings, reviews and Q&A, with database transactions to protect concurrent rating and review updates.
+- Built MVC product and brand management, image galleries and Azure Blob Storage integration, with reusable server-side image validation.
+- Refactored homepage queries to apply filtering, grouping and limits in the database, and updated storage operations to use async calls.
 
 ## Project preview
 
@@ -22,7 +27,7 @@ Catalog browsing with category, brand, rating and price filters, plus sorting op
   <img src="docs/images/storefront-catalog.png" alt="React storefront catalog with product filters and sorting" width="900">
 </a>
 
-Storefront screenshots are from the team demo. The React frontend was developed by the frontend team and is maintained separately.
+The screenshots show the React storefront built by the frontend team. Its source code is in a separate repository.
 
 Click any preview below to open the full-size screenshot.
 
@@ -38,9 +43,9 @@ Click any preview below to open the full-size screenshot.
       <a href="docs/images/storefront-search.png">Open full-size screenshot</a>
     </td>
     <td valign="top">
-      <a href="docs/images/admin-dashboard.png"><img src="docs/images/admin-dashboard.png" alt="MVC management dashboard in dark mode" width="420"></a><br>
+      <a href="docs/images/admin-dashboard-dark.png"><img src="docs/images/admin-dashboard-dark.png" alt="MVC management dashboard in dark mode" width="420"></a><br>
       Product and catalog management, with light and dark themes.<br>
-      <a href="docs/images/admin-dashboard.png">Open full-size screenshot</a>
+      <a href="docs/images/admin-dashboard-dark.png">Open full-size screenshot</a>
     </td>
   </tr>
   <tr>
@@ -61,69 +66,37 @@ Click any preview below to open the full-size screenshot.
   </tr>
 </table>
 
-Management screenshots show a local demo catalog. Sample product data and images: [DummyJSON](https://dummyjson.com/docs/products); Xiaomi Pad 6 imagery: [Xiaomi](https://www.mi.com/global/product/xiaomi-pad-6/).
+### Admin UI scenarios
 
-### More admin UI scenarios
-
-> **Want to see the interface in action? Click the expandable gallery below.**
-> Six additional screenshots cover form validation, image previews, empty search results, delete confirmation and mobile layouts. Each image opens at full size.
-
-<details>
-<summary><strong>📸 CLICK TO EXPAND: 6 more admin UI screenshots</strong></summary>
-<br>
+See form errors, image previews and mobile layouts. Click a preview to open that section in the gallery.
 
 <table>
   <tr>
-    <th width="50%">Form validation</th>
-    <th width="50%">Image gallery previews</th>
-  </tr>
-  <tr>
-    <td valign="top">
-      <a href="docs/images/admin-form-validation.png"><img src="docs/images/admin-form-validation.png" alt="Create product form displaying required-field and price validation messages" width="420"></a><br>
-      Inline feedback for missing fields and an invalid price.<br>
-      <a href="docs/images/admin-form-validation.png">Open full-size screenshot</a>
-    </td>
-    <td valign="top">
-      <a href="docs/images/admin-gallery-preview.png"><img src="docs/images/admin-gallery-preview.png" alt="Product gallery showing existing images and a newly selected image before saving" width="420"></a><br>
-      Preview a new image alongside existing gallery images before saving.<br>
-      <a href="docs/images/admin-gallery-preview.png">Open full-size screenshot</a>
-    </td>
-  </tr>
-  <tr>
-    <th width="50%">Delete confirmation</th>
-    <th width="50%">Empty search results</th>
-  </tr>
-  <tr>
-    <td valign="top">
-      <a href="docs/images/admin-delete-confirmation.png"><img src="docs/images/admin-delete-confirmation.png" alt="Delete product confirmation dialog naming the selected product and offering Cancel and Delete actions" width="420"></a><br>
-      Confirm the selected product before a permanent deletion.<br>
-      <a href="docs/images/admin-delete-confirmation.png">Open full-size screenshot</a>
-    </td>
-    <td valign="top">
-      <a href="docs/images/admin-search-empty.png"><img src="docs/images/admin-search-empty.png" alt="Product search with no matches and a Clear search action" width="420"></a><br>
-      A clear empty state with a quick way to reset the search.<br>
-      <a href="docs/images/admin-search-empty.png">Open full-size screenshot</a>
-    </td>
-  </tr>
-  <tr>
-    <th width="50%">Mobile catalog</th>
-    <th width="50%">Mobile navigation</th>
+    <th width="33%">Form validation</th>
+    <th width="33%">Image previews</th>
+    <th width="33%">Mobile layout</th>
   </tr>
   <tr>
     <td valign="top" align="center">
-      <a href="docs/images/admin-mobile-catalog.png"><img src="docs/images/admin-mobile-catalog.png" alt="Product catalog on a mobile screen with search, sorting and a horizontally scrollable table" width="220"></a><br>
-      Search, sort and browse listings on a narrow screen.<br>
-      <a href="docs/images/admin-mobile-catalog.png">Open full-size screenshot</a>
+      <a href="docs/admin-ui.md#form-validation"><img src="docs/images/admin-form-validation.png" alt="Product form with inline validation messages" width="260"></a><br>
+      <a href="docs/admin-ui.md#form-validation">View validation scenario</a>
     </td>
     <td valign="top" align="center">
-      <a href="docs/images/admin-mobile-navigation.png"><img src="docs/images/admin-mobile-navigation.png" alt="Expanded mobile navigation drawer with product and catalog management links" width="220"></a><br>
-      A collapsible navigation drawer keeps management tools accessible.<br>
-      <a href="docs/images/admin-mobile-navigation.png">Open full-size screenshot</a>
+      <a href="docs/admin-ui.md#image-previews"><img src="docs/images/admin-gallery-preview.png" alt="Product editor with a newly selected gallery image" width="260"></a><br>
+      <a href="docs/admin-ui.md#image-previews">View gallery editing</a>
+    </td>
+    <td valign="top" align="center">
+      <a href="docs/admin-ui.md#mobile-layouts"><img src="docs/images/admin-mobile-catalog.png" alt="Product listings on a mobile screen" width="106"></a><br>
+      <a href="docs/admin-ui.md#mobile-layouts">View mobile layouts</a>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="3" align="center">
+      <strong><a href="docs/admin-ui.md">Browse the full admin UI gallery</a></strong><br>
+      9 screenshots of the dashboard, catalog, editor, form errors, delete confirmation and mobile navigation.
     </td>
   </tr>
 </table>
-
-</details>
 
 ## Tech stack
 
@@ -138,7 +111,7 @@ Management screenshots show a local demo catalog. Sample product data and images
 
 - Product catalog with category, brand, price, and rating filters.
 - Product details, image galleries, search suggestions, and homepage collections.
-- Customer ratings and reviews, including updates to existing submissions.
+- Customer ratings and reviews, with options to update them.
 - Product questions and answers with seller-response identification.
 - User profiles, delivery addresses, and demo payment-method records.
 - Shopping cart, order creation, confirmation, cancellation, and order history.
@@ -148,15 +121,15 @@ Management screenshots show a local demo catalog. Sample product data and images
 ### MVC management interface
 
 - A responsive dashboard and navigation for desktop and mobile screens.
-- Seller-owned product listings with text search and sorting by title, price or creation date.
+- Product listings for the signed-in seller, with search and sorting by title, price or creation date.
 - Product creation and editing with category, brand, pricing and stock fields, plus client-side and server-side validation.
-- Primary-image previews, gallery uploads with drag-and-drop, and reordering or removing existing gallery images before saving.
+- Image previews and drag-and-drop gallery uploads. Existing gallery images can be reordered or removed before saving.
 - Product deletion confirmation and helpful empty search states.
-- Light and dark themes with a remembered preference, plus account controls in the top bar.
+- Light and dark themes that remember the user's choice, with account controls in the top bar.
 
 ## Architecture and implementation
 
-The application is organized into controller, service, and repository layers within a single ASP.NET Core project.
+The application uses controller, service and repository layers in a single ASP.NET Core project.
 
 ```text
 Controllers/     API endpoints and MVC controllers
@@ -174,33 +147,33 @@ Migrations/      SQL Server database migrations
 
 ### Authentication
 
-The API and MVC interface share the same JWT authentication mechanism. API clients can send access tokens through the `Authorization: Bearer` header; browser clients can also use the `amzn_access` cookie. An explicit authorization header takes precedence over the cookie.
+The API and MVC interface use the same JWT authentication. API clients can send access tokens in the `Authorization: Bearer` header. Browser clients can also use the `amzn_access` cookie. If both are present, the header is used.
 
-Refresh tokens are stored as hashes. Token rotation revokes the previous token and creates its replacement within a database transaction.
+Refresh tokens are stored as hashes. When a refresh token is used, the old token is revoked and a new one is created in the same database transaction.
 
 ### Database consistency
 
-Rating and review updates use database transactions and SQL Server locking hints (`UPDLOCK`, `ROWLOCK`) to serialize concurrent updates for the same product. Unique indexes enforce one rating and one review per user and product.
+Rating and review updates use database transactions and SQL Server locking hints (`UPDLOCK`, `ROWLOCK`). This makes updates to the same product run one at a time. Unique indexes limit each user to one rating and one review per product.
 
-Adding delivery addresses and payment methods uses transactions and per-user locking to coordinate duplicate checks and default selections.
+Adding delivery addresses and payment methods uses transactions and per-user locks. These protect checks for duplicates and the choice of a default address or payment method.
 
 ### Database diagram
 
-The SQL Server schema includes 20 application tables and 27 foreign-key relationships. Click the diagram to open its full-size SVG version.
+The SQL Server schema includes 20 application tables and 27 foreign-key relationships. Click the diagram to view it at full size.
 
-<a href="docs/images/database-schema.svg">
+<a href="docs/images/database-schema.png">
   <img src="docs/images/database-schema.png" alt="SQL Server database tables, columns and relationships" width="1000">
 </a>
 
-**[Open full-size database diagram (SVG)](docs/images/database-schema.svg)**
+**[Open full-size database diagram](docs/images/database-schema.png)**
 
-[Schema details and notation](docs/database-schema.md) | [Editable Workbench model](docs/diagrams/amzn-database.mwb)
+[Schema details and notation](docs/database-schema.md)
 
 ### Queries and background processing
 
-Question previews retrieve up to three answers per question, with ordering and limits applied in the database query.
+Question previews show up to three answers per question. The database query handles sorting and the three-answer limit.
 
-A hosted background service checks promotion validity at startup and every minute while the application is running, applying or removing discounts according to their start and end dates.
+A background service checks promotion dates at startup and every minute while the application is running. It applies or removes discounts based on their start and end dates.
 
 ## API explorer
 
@@ -292,9 +265,18 @@ dotnet ef database update
 
 ### 3. Start the application
 
+Open `AMZN.sln` in Visual Studio, select the `https` profile and run the project.
+
+Or run it from the terminal:
+
+```powershell
+dotnet run --launch-profile https
+```
+
+If the browser warns about the local HTTPS certificate, trust the development certificate once:
+
 ```powershell
 dotnet dev-certs https --trust
-dotnet run --launch-profile https
 ```
 
 Local URLs:
@@ -309,9 +291,9 @@ Swagger is enabled in the Development environment.
 
 To enable uploads, set `ConnectionStrings:AzureStorage` to your Azure Storage connection string and restart the application. The `amzn-storage` container is created automatically on the first image upload if it does not already exist.
 
-Catalog images are served through public blob URLs. The storage account must allow anonymous blob access; if you provide an existing container, configure it for public blob read access.
+Catalog images use public blob URLs. The storage account must allow anonymous blob access. If you use an existing container, enable public read access for its blobs.
 
-You can leave `AzureStorage` empty to explore the API and MVC pages without image uploads. Upload attempts then return an explanatory error. Browsing product lists does not require a server-side connection to Blob Storage.
+You can leave `AzureStorage` empty to explore the API and MVC pages without image uploads. If you try to upload an image, the app shows an error message. Browsing product lists does not require a server-side connection to Blob Storage.
 
 ### 5. Explore the project
 
@@ -319,4 +301,4 @@ For API access, register through `POST /api/auth/register` or sign in through `P
 
 For a local management demo, create an account at `/Admin/SignUp`, select the `Admin` role, and sign in through the MVC interface. Create categories and brands before adding products. Creating categories and products with images requires configured Blob Storage.
 
-A new database starts without catalog data. Use fictitious account and payment information when exploring the demo workflows.
+A new database starts without catalog data. Use test account and payment details when trying the demo features.
