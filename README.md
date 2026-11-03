@@ -1,6 +1,6 @@
 # AMZN - E-commerce Backend
 
-An Amazon-inspired e-commerce backend built with ASP.NET Core, Entity Framework Core and SQL Server. It provides a REST API for a separate React storefront and an MVC interface for catalog management.
+An Amazon-inspired e-commerce backend built with ASP.NET Core, Entity Framework Core and SQL Server. It provides a REST API for a separate React storefront and a responsive MVC interface for catalog management.
 
 Built collaboratively by three frontend developers and two backend developers, following a shared Figma design. This repository contains the backend and MVC management interface; the storefront is maintained separately.
 
@@ -29,7 +29,7 @@ Click any preview below to open the full-size screenshot.
 <table>
   <tr>
     <th width="50%">Storefront search</th>
-    <th width="50%">MVC management interface</th>
+    <th width="50%">Management dashboard</th>
   </tr>
   <tr>
     <td valign="top">
@@ -43,7 +43,87 @@ Click any preview below to open the full-size screenshot.
       <a href="docs/images/admin-dashboard.png">Open full-size screenshot</a>
     </td>
   </tr>
+  <tr>
+    <th width="50%">Product listings</th>
+    <th width="50%">Product editor</th>
+  </tr>
+  <tr>
+    <td valign="top">
+      <a href="docs/images/admin-products.png"><img src="docs/images/admin-products.png" alt="MVC product listings with search, sorting, prices and stock levels in light mode" width="420"></a><br>
+      Search and sort the seller's catalog.<br>
+      <a href="docs/images/admin-products.png">Open full-size screenshot</a>
+    </td>
+    <td valign="top">
+      <a href="docs/images/admin-product-edit.png"><img src="docs/images/admin-product-edit.png" alt="MVC product editor in dark mode with pricing, stock and a gallery of distinct product images" width="420"></a><br>
+      Edit product details, pricing and image galleries.<br>
+      <a href="docs/images/admin-product-edit.png">Open full-size screenshot</a>
+    </td>
+  </tr>
 </table>
+
+Management screenshots show a local demo catalog. Sample product data and images: [DummyJSON](https://dummyjson.com/docs/products); Xiaomi Pad 6 imagery: [Xiaomi](https://www.mi.com/global/product/xiaomi-pad-6/).
+
+### More admin UI scenarios
+
+> **Want to see the interface in action? Click the expandable gallery below.**
+> Six additional screenshots cover form validation, image previews, empty search results, delete confirmation and mobile layouts. Each image opens at full size.
+
+<details>
+<summary><strong>📸 CLICK TO EXPAND: 6 more admin UI screenshots</strong></summary>
+<br>
+
+<table>
+  <tr>
+    <th width="50%">Form validation</th>
+    <th width="50%">Image gallery previews</th>
+  </tr>
+  <tr>
+    <td valign="top">
+      <a href="docs/images/admin-form-validation.png"><img src="docs/images/admin-form-validation.png" alt="Create product form displaying required-field and price validation messages" width="420"></a><br>
+      Inline feedback for missing fields and an invalid price.<br>
+      <a href="docs/images/admin-form-validation.png">Open full-size screenshot</a>
+    </td>
+    <td valign="top">
+      <a href="docs/images/admin-gallery-preview.png"><img src="docs/images/admin-gallery-preview.png" alt="Product gallery showing existing images and a newly selected image before saving" width="420"></a><br>
+      Preview a new image alongside existing gallery images before saving.<br>
+      <a href="docs/images/admin-gallery-preview.png">Open full-size screenshot</a>
+    </td>
+  </tr>
+  <tr>
+    <th width="50%">Delete confirmation</th>
+    <th width="50%">Empty search results</th>
+  </tr>
+  <tr>
+    <td valign="top">
+      <a href="docs/images/admin-delete-confirmation.png"><img src="docs/images/admin-delete-confirmation.png" alt="Delete product confirmation dialog naming the selected product and offering Cancel and Delete actions" width="420"></a><br>
+      Confirm the selected product before a permanent deletion.<br>
+      <a href="docs/images/admin-delete-confirmation.png">Open full-size screenshot</a>
+    </td>
+    <td valign="top">
+      <a href="docs/images/admin-search-empty.png"><img src="docs/images/admin-search-empty.png" alt="Product search with no matches and a Clear search action" width="420"></a><br>
+      A clear empty state with a quick way to reset the search.<br>
+      <a href="docs/images/admin-search-empty.png">Open full-size screenshot</a>
+    </td>
+  </tr>
+  <tr>
+    <th width="50%">Mobile catalog</th>
+    <th width="50%">Mobile navigation</th>
+  </tr>
+  <tr>
+    <td valign="top" align="center">
+      <a href="docs/images/admin-mobile-catalog.png"><img src="docs/images/admin-mobile-catalog.png" alt="Product catalog on a mobile screen with search, sorting and a horizontally scrollable table" width="220"></a><br>
+      Search, sort and browse listings on a narrow screen.<br>
+      <a href="docs/images/admin-mobile-catalog.png">Open full-size screenshot</a>
+    </td>
+    <td valign="top" align="center">
+      <a href="docs/images/admin-mobile-navigation.png"><img src="docs/images/admin-mobile-navigation.png" alt="Expanded mobile navigation drawer with product and catalog management links" width="220"></a><br>
+      A collapsible navigation drawer keeps management tools accessible.<br>
+      <a href="docs/images/admin-mobile-navigation.png">Open full-size screenshot</a>
+    </td>
+  </tr>
+</table>
+
+</details>
 
 ## Tech stack
 
@@ -64,6 +144,15 @@ Click any preview below to open the full-size screenshot.
 - Shopping cart, order creation, confirmation, cancellation, and order history.
 - MVC management pages for products, categories, brands, and promotions, with light and dark themes.
 - Scheduled promotion activation and expiration.
+
+### MVC management interface
+
+- A responsive dashboard and navigation for desktop and mobile screens.
+- Seller-owned product listings with text search and sorting by title, price or creation date.
+- Product creation and editing with category, brand, pricing and stock fields, plus client-side and server-side validation.
+- Primary-image previews, gallery uploads with drag-and-drop, and reordering or removing existing gallery images before saving.
+- Product deletion confirmation and helpful empty search states.
+- Light and dark themes with a remembered preference, plus account controls in the top bar.
 
 ## Architecture and implementation
 
