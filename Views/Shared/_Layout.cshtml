@@ -1,173 +1,161 @@
 @using System.Security.Claims
 @{
     bool isAuthorized = Context.User.Identity?.IsAuthenticated == true;
-    string? userName = Context.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
-    char? firstLetter = string.IsNullOrWhiteSpace(userName) ? null : char.ToUpperInvariant(userName[0]);
-    string? userId = Context.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+    string? userName = User.FindFirstValue(ClaimTypes.Email);
+    string firstLetter = string.IsNullOrWhiteSpace(userName) ? "U" : userName[..1].ToUpperInvariant();
+    string controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    string action = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+    string Active(string target, string? targetAction = null) => controller == target && (targetAction == null || action == targetAction) ? " is-active" : "";
+    string? parentTitle = ViewData["ParentTitle"] as string;
+    string? parentUrl = ViewData["ParentUrl"] as string;
 }
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - AMZN</title>
-
-    <script>
-        (function () {
-            try {
-                var stored = localStorage.getItem("theme-mode");
-                var theme = (stored === "dark" || stored === "light")
-                    ? stored
-                    : (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-
-                document.documentElement.setAttribute("data-bs-theme", theme);
-            } catch (e) {
-                document.documentElement.setAttribute("data-bs-theme", "light");
-            }
-        })();
-    </script>
-
-    <script type="importmap"></script>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/AMZN.styles.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/product-gallery-editor.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/theme.css" asp-append-version="true" />
-
-    @await RenderSectionAsync("Styles", required: false)
-</head>
-<body class="theme-scope">
-    <header>
-        <nav class="navbar navbar-expand-sm border-bottom box-shadow mb-3 bg-body">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">AMZN</a>
-
-                <button class="navbar-toggler"
-                        type="button"
-                        data-bs-toggle="collapse"
-                        data-bs-target=".navbar-collapse"
-                        aria-controls="navbarSupportedContent"
-                        aria-expanded="false"
-                        aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>@ViewData["Title"] - AMZN</title>
+        <script>
+            (function () {
+                try {
+                    var stored = localStorage.getItem("theme-mode");
+                    var theme = stored === "dark" || stored === "light" ? stored
+                        : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+                    document.documentElement.setAttribute("data-bs-theme", theme);
+                } catch (e) { document.documentElement.setAttribute("data-bs-theme", "light"); }
+            })();
+        </script>
+        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+        <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/css/theme.css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/css/management-pages.css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/css/product-gallery-editor.css" asp-append-version="true" />
+        @await RenderSectionAsync("Styles", required: false)
+    </head>
+    <body class="theme-scope" data-image-placeholder="@Url.Content("~/images/product-placeholder.svg")">
+        <a class="skip-link" href="#main-content">Skip to content</a>
+        <partial name="_AdminIcons" />
+        <aside class="admin-sidebar offcanvas-lg offcanvas-start" id="adminSidebar" tabindex="-1" aria-label="Management navigation">
+            <div class="sidebar-inner">
+                <div class="sidebar-brand">
+                    <a class="brand" asp-controller="Home" asp-action="Index" aria-label="AMZN home">AMZN<span class="brand-mark" aria-hidden="true"></span>
+                    </a>
+                    <button class="sidebar-close" type="button" data-bs-dismiss="offcanvas" data-bs-target="#adminSidebar" aria-label="Close navigation">
+                        <svg class="icon" aria-hidden="true"><use href="#i-close" /></svg>
+                    </button>
+                </div>
+                <nav class="sidebar-nav" aria-label="Catalog management">
+                    <a class="sidebar-link@(Active("Home", "Index"))" asp-controller="Home" asp-action="Index" aria-current="@(Active("Home", "Index") != "" ? "page" : null)">
+                        <svg class="icon" aria-hidden="true"><use href="#i-home" /></svg>
+                        Dashboard
+                    </a>
+                    <a class="sidebar-link@(Active("AdminProducts"))" asp-controller="AdminProducts" asp-action="Index" aria-current="@(controller == "AdminProducts" ? "page" : null)">
+                        <svg class="icon" aria-hidden="true"><use href="#i-box" /></svg>
+                        My products
+                    </a>
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a class="sidebar-link@(Active("AdminBrands"))" asp-controller="AdminBrands" asp-action="Index" aria-current="@(controller == "AdminBrands" ? "page" : null)">
+                            <svg class="icon" aria-hidden="true"><use href="#i-tag" /></svg>
+                            Brands
+                        </a>
+                        <a class="sidebar-link@(Active("Admin", "Category"))" asp-controller="Admin" asp-action="Category" aria-current="@(action == "Category" ? "page" : null)">
+                            <svg class="icon" aria-hidden="true"><use href="#i-layers" /></svg>
+                            Categories
+                        </a>
+                        <a class="sidebar-link@(Active("Admin", "Action"))" asp-controller="Admin" asp-action="Action" aria-current="@(action == "Action" ? "page" : null)">
+                            <svg class="icon" aria-hidden="true"><use href="#i-promotion" /></svg>
+                            Promotions
+                        </a>
+                        <div class="sidebar-separator" role="separator"></div>
+                        <a class="sidebar-link@(Active("Admin", "SignUp"))" asp-controller="Admin" asp-action="SignUp">
+                            <svg class="icon" aria-hidden="true"><use href="#i-user" /></svg>
+                            Add user
+                        </a>
+                    }
+                </nav>
+            </div>
+        </aside>
+        <header class="admin-topbar">
+            <div class="topbar-location">
+                <button class="menu-button" type="button" data-bs-toggle="offcanvas" data-bs-target="#adminSidebar" aria-controls="adminSidebar" aria-label="Open navigation">
+                    <svg class="icon" aria-hidden="true"><use href="#i-menu" /></svg>
                 </button>
-
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-body" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-
-                        <environment include="Development">
-                            <li class="nav-item">
-                                <a class="nav-link text-body" href="/swagger" target="_blank" rel="noopener">Swagger</a>
-                            </li>
-                        </environment>
-                    </ul>
-
-                    <div class="d-flex align-items-center flex-wrap gap-2">
-                        <button type="button"
-                                id="theme-toggle"
-                                class="btn btn-sm btn-outline-secondary"
-                                title="Dark theme"
-                                aria-label="Dark theme"
-                                aria-pressed="false">
-                            <i class="bi bi-sun-fill theme-icon-light"></i>
-                            <i class="bi bi-moon-stars-fill theme-icon-dark"></i>
-                            <span class="theme-label ms-1">Dark theme</span>
+                <a class="brand topbar-brand" asp-controller="Home" asp-action="Index" aria-label="AMZN home">AMZN<span class="brand-mark" aria-hidden="true"></span></a>
+                <nav class="page-breadcrumb" aria-label="Breadcrumb">
+                    <a href="@(parentUrl ?? Url.Action("Index", "Home"))">@(parentTitle ?? "Catalog")</a>
+                    <span aria-hidden="true">/</span>
+                    <span aria-current="page">@ViewData["Title"]</span>
+                </nav>
+            </div>
+            <nav class="topbar-actions" aria-label="Account and display settings">
+                <environment include="Development">
+                    <a class="topbar-button" href="/swagger" target="_blank" rel="noopener" title="Swagger (opens a new tab)" aria-label="Swagger (opens a new tab)">
+                        <svg class="icon icon--small" aria-hidden="true"><use href="#i-code" /></svg>
+                        <span class="topbar-label">Swagger</span>
+                    </a>
+                </environment>
+                <button type="button" id="theme-toggle" class="topbar-button" title="Dark theme" aria-label="Dark theme" aria-pressed="false">
+                    <svg class="icon icon--small theme-icon-dark" aria-hidden="true"><use href="#i-moon" /></svg>
+                    <svg class="icon icon--small theme-icon-light" aria-hidden="true"><use href="#i-sun" /></svg>
+                    <span class="theme-label">Dark theme</span>
+                </button>
+                <div class="topbar-account">
+                    @if (isAuthorized)
+                    {
+                        <form asp-controller="Admin" asp-action="Logout" method="post">
+                            <button type="submit" class="topbar-button" title="@userName">
+                                <span class="account-avatar" aria-hidden="true">@firstLetter</span>
+                                Sign out
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <button type="button" class="topbar-button" data-bs-toggle="modal" data-bs-target="#authModal">Sign in</button>
+                        <a class="action-button action-button--secondary" asp-controller="Admin" asp-action="SignUp">Register</a>
+                    }
+                </div>
+            </nav>
+        </header>
+        <main class="admin-content" id="main-content" tabindex="-1">
+            @RenderBody()
+        </main>
+        <div class="modal fade" id="authModal" tabindex="-1" aria-labelledby="authModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 class="modal-title fs-5" id="authModalLabel">Sign in</h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
                         </button>
-
-                        @if (isAuthorized)
-                        {
-                            <span class="auth-letter" data-auth-ua-id="@userId" title="@userName" style="margin: 0.5em">@firstLetter</span>
-                            <form asp-controller="Admin" asp-action="Logout" method="post" class="d-inline">
-                                <button type="submit" class="nav-link text-body border-0 bg-transparent" style="margin: 0.5em">Logout</button>
-                            </form>
-                        }
-                        else
-                        {
-                            <span class="nav-link text-body"
-                                  style="cursor: pointer"
-                                  role="button"
-                                  data-bs-toggle="modal"
-                                  data-bs-target="#authModal">
-                                Sing In
-                            </span>
-
-                            <a class="nav-link text-body" asp-area="" asp-controller="Admin" asp-action="SignUp">Register</a>
-                        }
+                    </div>
+                    <div class="modal-body">
+                        <form id="auth-modal-form" class="auth-fields">
+                            @Html.AntiForgeryToken()
+                            <div>
+                                <label class="form-label" for="auth-email">Email</label>
+                                <input id="auth-email" name="Email" type="email" class="form-control" autocomplete="username" required />
+                            </div>
+                            <div>
+                                <label class="form-label" for="auth-password">Password</label>
+                                <input id="auth-password" name="Password" type="password" class="form-control" autocomplete="current-password" required />
+                            </div>
+                        </form>
+                        <div id="message" class="auth-feedback mt-3" role="alert"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="action-button action-button--secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" form="auth-modal-form" class="action-button action-button--primary">Sign in</button>
                     </div>
                 </div>
             </div>
-        </nav>
-    </header>
-
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
-
-    <footer class="border-top footer text-body-secondary">
-        <div class="container">
-            &copy; 2026 - AMZN - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
-    </footer>
-
-    <div class="modal fade" id="authModal" tabindex="-1" aria-labelledby="authModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="authModalLabel">Sing In</h1>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-
-                <div class="modal-body">
-                    <form id="auth-modal-form">
-                        @Html.AntiForgeryToken()
-                        <div class="mb-3">
-                            <span class="input-group-text" id="AuthLogin-addon">
-                                <i class="bi bi-box-arrow-in-right"></i>
-                            </span>
-                            <input type="email"
-                                   class="form-control"
-                                   name="Email"
-                                   placeholder="Email"
-                                   aria-label="AuthEmail"
-                                   aria-describedby="AuthEmail-addon">
-                        </div>
-
-                        <div class="mb-3">
-                            <span class="input-group-text" id="AuthPassword-addon">
-                                <i class="bi bi-box-arrow-in-right"></i>
-                            </span>
-                            <input type="password"
-                                   class="form-control"
-                                   name="Password"
-                                   placeholder="Password"
-                                   aria-label="AuthPassword"
-                                   aria-describedby="AuthPassword-addon">
-                        </div>
-                    </form>
-                </div>
-
-                <div class="modal-footer">
-                    <span id="message"></span>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Dismiss</button>
-                    <button type="submit" form="auth-modal-form" class="btn btn-primary">Enter</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <partial name="_SuccessToast" model='TempData["Success"] as string' />
-
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    <script src="~/js/theme-toggle.js" asp-append-version="true"></script>
-
-    @await RenderSectionAsync("Scripts", required: false)
-</body>
+        <partial name="_SuccessToast" model='TempData["Success"] as string' />
+        <script src="~/lib/jquery/dist/jquery.min.js"></script>
+        <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="~/js/site.js" asp-append-version="true"></script>
+        <script src="~/js/theme-toggle.js" asp-append-version="true"></script>
+        <script src="~/js/admin-ui.js" asp-append-version="true"></script>
+        @await RenderSectionAsync("Scripts", required: false)
+    </body>
 </html>

@@ -1,44 +1,34 @@
 @using AMZN.Models.Product
+@using System.Globalization
 @model MyProductsListViewModel
-
 @{
     ViewData["Title"] = "My products";
-
     string? errorMessage = TempData["Error"] as string;
 }
-
-@section Styles {
-    <link rel="stylesheet" href="~/css/management-pages.css" asp-append-version="true" />
+@section Styles
+{
     <link rel="stylesheet" href="~/css/product-management.css" asp-append-version="true" />
 }
-
-
-<div class="management-page">
+<div class="management-page js-products-page">
     <div class="management-page__header">
         <div>
             <h1 class="management-page__title">My products</h1>
-            <p class="management-page__subtitle">
-                Manage your products, update media and keep stock information up to date.
-            </p>
+            <p class="management-page__subtitle">Manage listings, pricing and stock.</p>
         </div>
-
-        <a asp-action="Create" class="action-button action-button--primary">Add product</a>
+        <a asp-action="Create" class="action-button action-button--primary">
+            <svg class="icon" aria-hidden="true"><use href="#i-plus" /></svg>
+            Add product
+        </a>
     </div>
-
-
     @if (!string.IsNullOrWhiteSpace(errorMessage))
     {
         <div class="alert-box alert-box--danger" role="alert">@errorMessage</div>
     }
-
     @if (Model.Products.Count == 0)
     {
         <div class="empty-state">
             <h2 class="empty-state__title">No products yet</h2>
-            <p class="empty-state__text">
-                Start by creating your first product.
-            </p>
-
+            <p class="empty-state__text">Start by creating your first product.</p>
             <div class="action-bar action-bar--center">
                 <a asp-action="Create" class="action-button action-button--primary">Create product</a>
             </div>
@@ -46,64 +36,78 @@
     }
     else
     {
+        <div class="products-toolbar">
+            <div class="products-search">
+                <svg class="icon" aria-hidden="true"><use href="#i-search" /></svg>
+                <label for="product-search" class="visually-hidden">Search products</label>
+                <input id="product-search" class="form-control" type="search" placeholder="Search products..." autocomplete="off" />
+            </div>
+            <div class="products-sort">
+                <label for="product-sort" class="visually-hidden">Sort products</label>
+                <select id="product-sort" class="form-select">
+                    <option value="newest">Newest first</option>
+                    <option value="oldest">Oldest first</option>
+                    <option value="title">Title: A to Z</option>
+                    <option value="price-asc">Price: low to high</option>
+                    <option value="price-desc">Price: high to low</option>
+                </select>
+            </div>
+        </div>
+        <p class="products-scroll-hint">Swipe the table to see prices, stock and actions.</p>
         <div class="table-card">
-            <div class="table-wrap">
-                <table class="management-table">
+            <div class="table-wrap" tabindex="0" role="region" aria-label="Product list, scroll horizontally on smaller screens">
+                <table class="management-table products-table">
                     <thead>
                         <tr>
-                            <th>Image</th>
-                            <th>Title</th>
-                            <th>Price</th>
-                            <th>Stock</th>
-                            <th>Created</th>
-                            <th style="width: 190px;">Actions</th>
+                            <th scope="col">Product</th>
+                            <th scope="col">Price</th>
+                            <th scope="col">Stock</th>
+                            <th scope="col">Created</th>
+                            <th scope="col">Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="js-products-rows">
                         @foreach (var product in Model.Products)
                         {
-                            <tr>
+                            <tr class="js-product-row" data-title="@product.Title" data-price="@product.CurrentPrice.ToString(CultureInfo.InvariantCulture)" data-created="@product.CreatedAt.Ticks">
                                 <td>
-                                    <img src="@product.PrimaryImageUrl"
-                                         alt="@product.Title"
-                                         class="products-thumbnail" />
+                                    <div class="product-cell">
+                                        <img src="@product.PrimaryImageUrl" alt="" class="products-thumbnail" loading="lazy" />
+                                        <span class="products-title-cell">@product.Title</span>
+                                    </div>
                                 </td>
-                                <td class="products-title-cell">@product.Title</td>
-                                <td>@product.CurrentPrice.ToString("F2")</td>
-                                <td>@product.StockQuantity</td>
-                                <td>@product.CreatedAt.ToString("yyyy-MM-dd")</td>
+                                <td class="product-price">@product.CurrentPrice.ToString("C2", CultureInfo.GetCultureInfo("en-US"))</td>
+                                <td>
+                                    <span class="stock-state @(product.StockQuantity > 0 ? "stock-state--available" : "stock-state--empty")">
+                                        <span class="stock-dot" aria-hidden="true"></span>@(product.StockQuantity > 0 ? $"{product.StockQuantity} units" : "Out of stock")</span>
+                                </td>
+                                <td class="product-created">
+                                    <time datetime="@product.CreatedAt.ToString("yyyy-MM-dd")">@product.CreatedAt.ToString("MMM dd, yyyy", CultureInfo.InvariantCulture)</time>
+                                </td>
                                 <td>
                                     <div class="inline-actions">
-                                        <a asp-action="Edit"
-                                           asp-route-id="@product.Id"
-                                           class="action-button action-button--warning action-button--small">
-                                            Edit
-                                        </a>
-
-                                        <button type="button"
-                                                class="action-button action-button--danger action-button--small"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#deleteConfirmModal"
-                                                data-delete-url="@Url.Action("Delete", "AdminProducts", new { id = product.Id })"
-                                                data-entity-name="@product.Title"
-                                                data-entity-label="product">
-                                            Delete
+                                        <a asp-action="Edit" asp-route-id="@product.Id" class="product-edit-link" aria-label="Edit @product.Title">Edit</a>
+                                        <button type="button" class="icon-button icon-button--danger" data-bs-toggle="modal" data-bs-target="#deleteConfirmModal" data-delete-url="@Url.Action("Delete", "AdminProducts", new { id = product.Id })" data-entity-name="@product.Title" data-entity-label="product" aria-label="Delete @product.Title" title="Delete product">
+                                            <svg class="icon" aria-hidden="true"><use href="#i-trash" /></svg>
                                         </button>
-
                                     </div>
                                 </td>
                             </tr>
                         }
                     </tbody>
                 </table>
+                <div class="products-no-results" id="product-no-results" hidden>
+                    <h2>No matching products</h2>
+                    <p>Try a different search.</p>
+                    <button type="button" class="action-button action-button--secondary" id="clear-product-search">Clear search</button>
+                </div>
             </div>
         </div>
+        <p class="products-count" id="product-count" role="status" aria-live="polite">@Model.Products.Count @(Model.Products.Count == 1 ? "product" : "products")</p>
     }
 </div>
-
 <partial name="_DeleteConfirmModal" />
-
-
-@section Scripts {
+@section Scripts
+{
     <script src="~/js/product-management.js" asp-append-version="true"></script>
 }

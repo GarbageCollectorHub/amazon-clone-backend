@@ -95,6 +95,13 @@ public class CloudStorageService : ICloudStorageService
         if (string.IsNullOrWhiteSpace(fileUrl))
             return false;
 
+        if (_containerClient == null || !Uri.TryCreate(fileUrl, UriKind.Absolute, out var fileUri))
+            return false;
+
+        var containerUri = new Uri(_containerClient.Uri.GetLeftPart(UriPartial.Path).TrimEnd('/') + "/");
+        if (!containerUri.IsBaseOf(fileUri))
+            return false;
+
         string blobName = ExtractBlobName(fileUrl);
         return await DeleteFileByNameAsync(blobName, cancellationToken);
     }

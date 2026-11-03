@@ -192,7 +192,7 @@ function initProductGalleryEditor(root) {
             if (totalCount === 0) {
                 countLabel.hidden = true;
             } else if (isEditMode) {
-                countLabel.textContent = `${existingCount} existing • ${newCount} new • ${totalCount} / ${maxGalleryImages} total`;
+                countLabel.textContent = `${totalCount} / ${maxGalleryImages} images`;
                 countLabel.hidden = false;
             } else {
                 countLabel.textContent = `${newCount} / ${maxGalleryImages} images selected`;
@@ -203,6 +203,8 @@ function initProductGalleryEditor(root) {
         if (addCard) {
             addCard.hidden = totalCount >= maxGalleryImages;
         }
+        const newNote = root.querySelector(".gallery-new-note");
+        if (newNote) newNote.hidden = newCount === 0;
     }
 
     function renderExistingHiddenInputs() {
@@ -264,10 +266,11 @@ function initProductGalleryEditor(root) {
 
             const removeButton = document.createElement("button");
             removeButton.type = "button";
-            removeButton.className = "btn btn-sm btn-danger position-absolute top-0 end-0 m-1 product-gallery-editor__remove-btn js-pge-remove-new";
+            removeButton.className = "product-gallery-editor__remove-btn js-pge-remove-new";
             removeButton.setAttribute("data-file-index", index.toString());
             removeButton.title = "Remove image";
-            removeButton.innerHTML = "&times;";
+            removeButton.setAttribute("aria-label", `Remove ${file.name}`);
+            removeButton.innerHTML = '<svg class="icon icon--small" aria-hidden="true"><use href="#i-close"></use></svg>';
             removeButton.setAttribute("draggable", "false");
 
             const image = document.createElement("img");
@@ -409,6 +412,8 @@ function initProductGalleryEditor(root) {
         new Sortable(existingGrid, {
             animation: 180,
             draggable: ".js-pge-existing-item",
+            filter: ".js-pge-remove-existing",
+            preventOnFilter: false,
             ghostClass: "sortable-ghost",
             chosenClass: "product-gallery-editor__card--chosen",
             onSort: renderExistingHiddenInputs
@@ -416,6 +421,20 @@ function initProductGalleryEditor(root) {
     }
 
     if (existingGrid) {
+        existingGrid.addEventListener("keydown", function (event) {
+            const item = event.target.closest(".js-pge-existing-item");
+            if (!allowExistingReorder || !item || event.target !== item) return;
+            if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+            event.preventDefault();
+            const neighbor = event.key === "ArrowLeft" ? item.previousElementSibling : item.nextElementSibling;
+            if (!neighbor) return;
+            if (event.key === "ArrowLeft") existingGrid.insertBefore(item, neighbor);
+            else neighbor.insertAdjacentElement("afterend", item);
+            item.focus();
+            renderExistingHiddenInputs();
+            const status = root.querySelector(".js-pge-reorder-status");
+            if (status) status.textContent = `Image moved to position ${getExistingItems().indexOf(item) + 1}.`;
+        });
         existingGrid.addEventListener("click", function (event) {
             const removeExistingButton = event.target.closest(".js-pge-remove-existing");
             if (!removeExistingButton) {

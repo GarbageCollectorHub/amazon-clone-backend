@@ -55,7 +55,7 @@
                     <div class="field-group">
                         <label class="form-label" for="parent-category">Parent category</label>
                         <select id="parent-category" name="parent-category" class="form-select">
-                            <option value="">— None (root category) —</option>
+                            <option value="">None (root category)</option>
                             @foreach (var category in Model.Categories)
                             {
                                 <option value="@category.Id">@category.Name</option>

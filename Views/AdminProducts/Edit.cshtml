@@ -1,177 +1,139 @@
 @using AMZN.Models.Product
 @model ProductEditViewModel
-
 @{
     ViewData["Title"] = "Edit product";
-
-    bool hasModelErrors = !ViewData.ModelState.IsValid;
+    ViewData["ParentTitle"] = "My products";
+    ViewData["ParentUrl"] = Url.Action("Index", "AdminProducts");
 }
-
-@section Styles {
-    <link rel="stylesheet" href="~/css/management-pages.css" asp-append-version="true" />
+@section Styles
+{
     <link rel="stylesheet" href="~/css/product-management.css" asp-append-version="true" />
 }
-
-<div class="management-page">
+<div class="management-page product-editor-page">
     <div class="management-page__header">
         <div>
             <h1 class="management-page__title">Edit product</h1>
-            <p class="management-page__subtitle">
-                Update product details, stock, pricing and images.
-            </p>
+            <p class="management-page__subtitle">Update product details, pricing and images.</p>
+            <a asp-action="Index" class="back-link product-back-link">
+                <svg class="icon icon--small" aria-hidden="true"><use href="#i-back" /></svg>
+                Back to products
+            </a>
         </div>
-
-        <a asp-action="Index" class="back-link">
-            <span class="back-link__icon" aria-hidden="true">←</span>
-            <span>Back to products</span>
-        </a>
     </div>
-
-
     @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
     {
         <div class="alert-box alert-box--danger" role="alert">@Model.ErrorMessage</div>
     }
-
-    @if (hasModelErrors)
-    {
-        <div asp-validation-summary="All" class="validation-summary"></div>
-    }
-
-    <form id="edit-product-form"
-          asp-action="Edit"
-          asp-route-id="@Model.ProductId"
-          method="post"
-          enctype="multipart/form-data">
+    <div asp-validation-summary="All" class="validation-summary" role="alert"></div>
+    <form id="edit-product-form" asp-action="Edit" asp-route-id="@Model.ProductId" method="post" enctype="multipart/form-data">
         @Html.AntiForgeryToken()
-
-        <div class="products-layout">
-            <section class="panel">
-                <h2 class="panel__title">Basic info</h2>
-                <p class="panel__description">
-                    Product name, category, brand and description.
-                </p>
-
-                <div class="form-grid">
-                    <div class="field-group">
-                        <label asp-for="Form.Title" class="form-label">Title</label>
-                        <input asp-for="Form.Title" class="form-control" />
-                        <span asp-validation-for="Form.Title" class="text-danger"></span>
-                    </div>
-
-                    <div class="form-grid form-grid--2">
+        <div class="product-form-layout">
+            <div class="product-form-main">
+                <section class="panel" aria-labelledby="product-details-title">
+                    <h2 class="panel__title" id="product-details-title">Product details</h2>
+                    <div class="form-grid">
                         <div class="field-group">
-                            <label asp-for="Form.CategoryId" class="form-label">Category</label>
-                            <select asp-for="Form.CategoryId" class="form-select">
-                                <option value="">-- select --</option>
-                                @foreach (var category in Model.Categories)
-                                {
-                                    <option value="@category.Id">@category.Name</option>
-                                }
-                            </select>
-                            <span asp-validation-for="Form.CategoryId" class="text-danger"></span>
+                            <label asp-for="Form.Title" class="form-label">Title</label>
+                            <input asp-for="Form.Title" class="form-control" />
+                            <span asp-validation-for="Form.Title" class="text-danger"></span>
                         </div>
-
-                        <div class="field-group">
-                            <label asp-for="Form.BrandId" class="form-label">Brand</label>
-                            <select asp-for="Form.BrandId" class="form-select">
-                                <option value="">-- select --</option>
-                                @foreach (var brand in Model.Brands)
-                                {
-                                    <option value="@brand.Id">@brand.Name</option>
-                                }
-                            </select>
-                            <span asp-validation-for="Form.BrandId" class="text-danger"></span>
+                        <div class="form-grid form-grid--2">
+                            <div class="field-group">
+                                <label asp-for="Form.CategoryId" class="form-label">Category</label>
+                                <select asp-for="Form.CategoryId" class="form-select">
+                                    <option value="">Select category</option>
+                                    @foreach (var category in Model.Categories)
+                                    {
+                                        <option value="@category.Id">@category.Name</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="Form.CategoryId" class="text-danger"></span>
+                            </div>
+                            <div class="field-group">
+                                <label asp-for="Form.BrandId" class="form-label">Brand</label>
+                                <select asp-for="Form.BrandId" class="form-select">
+                                    <option value="">Select brand</option>
+                                    @foreach (var brand in Model.Brands)
+                                    {
+                                        <option value="@brand.Id">@brand.Name</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="Form.BrandId" class="text-danger"></span>
+                            </div>
                         </div>
-                    </div>
-
-                    <div class="field-group">
-                        <label asp-for="Form.Description" class="form-label">Description</label>
-                        <textarea asp-for="Form.Description" class="form-control" rows="5"></textarea>
-                        <span asp-validation-for="Form.Description" class="text-danger"></span>
-                    </div>
-                </div>
-            </section>
-
-            <section class="panel">
-                <h2 class="panel__title">Pricing and stock</h2>
-                <p class="panel__description">
-                    Update quantity and price values visible to customers.
-                </p>
-
-                <div class="form-grid form-grid--3">
-                    <div class="field-group">
-                        <label asp-for="Form.StockQuantity" class="form-label">Stock quantity</label>
-                        <input asp-for="Form.StockQuantity" class="form-control" type="number" step="1" />
-                        <span asp-validation-for="Form.StockQuantity" class="text-danger"></span>
-                    </div>
-
-                    <div class="field-group">
-                        <label asp-for="Form.CurrentPrice" class="form-label">Current price</label>
-                        <input asp-for="Form.CurrentPrice" class="form-control" type="number" step="0.01" />
-                        <span asp-validation-for="Form.CurrentPrice" class="text-danger"></span>
-                    </div>
-
-                    <div class="field-group">
-                        <label asp-for="Form.OriginalPrice" class="form-label">Original price</label>
-                        <input asp-for="Form.OriginalPrice" class="form-control" type="number" step="0.01" />
-                        <span asp-validation-for="Form.OriginalPrice" class="text-danger"></span>
-                    </div>
-                </div>
-            </section>
-
-            <section class="panel panel--full">
-                <h2 class="panel__title">Primary image</h2>
-                <p class="panel__description">
-                    Replace the main product image only when you want to update it.
-                </p>
-
-                <div class="primary-image-layout">
-                    <img src="@Model.CurrentPrimaryImageUrl"
-                         alt="Primary image"
-                         class="primary-image-preview" />
-
-                    <div>
-                        <p class="primary-image-note">
-                            Current primary image is shown on the left. Upload a new file to replace it.
-                        </p>
-
                         <div class="field-group">
-                            <label asp-for="Form.NewPrimaryImage" class="form-label">Replace primary image</label>
-                            <input asp-for="Form.NewPrimaryImage"
-                                   class="form-control"
-                                   type="file"
-                                   accept=".jpg,.jpeg,.png,.webp" />
-                            <span asp-validation-for="Form.NewPrimaryImage" class="text-danger"></span>
+                            <label asp-for="Form.Description" class="form-label">Description</label>
+                            <textarea asp-for="Form.Description" class="form-control" rows="4"></textarea>
+                            <span asp-validation-for="Form.Description" class="text-danger"></span>
                         </div>
                     </div>
-                </div>
-            </section>
-
-            <section class="panel panel--full">
-                @await Html.PartialAsync("_ProductGalleryEditor", new ProductGalleryEditorViewModel
-                {
-                    Title = "Gallery images",
-                    NewFilesInputName = "Form.NewGalleryImages",
-                    ValidationMessageFieldName = "Form.NewGalleryImages",
-                    ExistingIdsFieldPrefix = "Form.ExistingGalleryImageIdsInOrder",
-                    ExistingImages = Model.ExistingGalleryImages,
-                    MaxGalleryImages = ProductEditFormModel.MaxGalleryImages,
-                    AllowExistingReorder = true,
-                    IsEditMode = true
-                })
-            </section>
+                </section>
+                <section class="panel gallery-panel">
+                    @await Html.PartialAsync("_ProductGalleryEditor", new ProductGalleryEditorViewModel
+                    {
+                        Title = "Gallery images",
+                        NewFilesInputName = "Form.NewGalleryImages",
+                        ValidationMessageFieldName = "Form.NewGalleryImages",
+                        ExistingIdsFieldPrefix = "Form.ExistingGalleryImageIdsInOrder",
+                        ExistingImages = Model.ExistingGalleryImages,
+                        MaxGalleryImages = ProductEditFormModel.MaxGalleryImages,
+                        AllowExistingReorder = true,
+                        IsEditMode = true
+                    })
+                </section>
+            </div>
+            <div class="product-form-aside">
+                <section class="panel" aria-labelledby="product-pricing-title">
+                    <h2 class="panel__title" id="product-pricing-title">Pricing and stock</h2>
+                    <div class="form-grid">
+                        <div class="field-group">
+                            <label asp-for="Form.CurrentPrice" class="form-label">Current price</label>
+                            <div class="price-input">
+                                <span aria-hidden="true">$</span>
+                                <input asp-for="Form.CurrentPrice" class="form-control" type="number" min="0" step="0.01" />
+                            </div>
+                            <span asp-validation-for="Form.CurrentPrice" class="text-danger"></span>
+                        </div>
+                        <div class="field-group">
+                            <label asp-for="Form.OriginalPrice" class="form-label">Original price <span class="field-optional">(optional)</span>
+                            </label>
+                            <div class="price-input">
+                                <span aria-hidden="true">$</span>
+                                <input asp-for="Form.OriginalPrice" class="form-control" type="number" min="0" step="0.01" />
+                            </div>
+                            <span asp-validation-for="Form.OriginalPrice" class="text-danger"></span>
+                        </div>
+                        <div class="field-group">
+                            <label asp-for="Form.StockQuantity" class="form-label">Stock quantity</label>
+                            <input asp-for="Form.StockQuantity" class="form-control" type="number" min="0" step="1" />
+                            <span asp-validation-for="Form.StockQuantity" class="text-danger"></span>
+                        </div>
+                    </div>
+                </section>
+                <section class="panel primary-image-panel" aria-labelledby="primary-image-title">
+                    <h2 class="panel__title" id="primary-image-title">Primary image</h2>
+                    <img src="@Model.CurrentPrimaryImageUrl" alt="Current primary image for @Model.Form.Title" class="primary-image-preview js-primary-image-preview" />
+                    <div class="primary-image-picker">
+                        <input asp-for="Form.NewPrimaryImage" class="visually-hidden js-primary-image-input" type="file" accept=".jpg,.jpeg,.png,.webp" aria-describedby="primary-image-hint" />
+                        <label asp-for="Form.NewPrimaryImage" class="action-button action-button--secondary">
+                            <svg class="icon icon--small" aria-hidden="true"><use href="#i-upload" /></svg>
+                            Replace image
+                        </label>
+                    </div>
+                    <p class="image-hint" id="primary-image-hint">JPG, PNG or WebP. Max 5 MB.</p>
+                    <span asp-validation-for="Form.NewPrimaryImage" class="text-danger"></span>
+                    <span class="image-selection-name js-primary-image-name" role="status"></span>
+                </section>
+            </div>
         </div>
-
-        <div class="action-bar">
+        <div class="action-bar product-form-actions">
             <a asp-action="Index" class="action-button action-button--secondary">Cancel</a>
             <button type="submit" class="action-button action-button--primary">Save changes</button>
         </div>
     </form>
 </div>
-
-
-@section Scripts {
+@section Scripts
+{
     <partial name="_ValidationScriptsPartial" />
     <script src="~/lib/sortablejs/Sortable.min.js" asp-append-version="true"></script>
     <script src="~/js/product-gallery-editor.js" asp-append-version="true"></script>

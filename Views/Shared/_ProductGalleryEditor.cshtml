@@ -1,135 +1,56 @@
 @model ProductGalleryEditorViewModel
-
-<div class="product-gallery-editor js-product-gallery-editor"
-     data-max-gallery-images="@Model.MaxGalleryImages"
-     data-max-file-bytes="@Model.MaxFileBytes"
-     data-allow-existing-reorder="@Model.AllowExistingReorder.ToString().ToLowerInvariant()"
-     data-existing-ids-field-prefix="@Model.ExistingIdsFieldPrefix"
-     data-is-edit-mode="@Model.IsEditMode.ToString().ToLowerInvariant()">
-
+<div class="product-gallery-editor js-product-gallery-editor" data-max-gallery-images="@Model.MaxGalleryImages" data-max-file-bytes="@Model.MaxFileBytes" data-allow-existing-reorder="@Model.AllowExistingReorder.ToString().ToLowerInvariant()" data-existing-ids-field-prefix="@Model.ExistingIdsFieldPrefix" data-is-edit-mode="@Model.IsEditMode.ToString().ToLowerInvariant()">
     <div class="product-gallery-editor__topbar">
-        <label class="form-label mb-0">@Model.Title</label>
-        <div class="product-gallery-editor__count text-muted small js-pge-count" hidden></div>
+        <h2 class="panel__title">@Model.Title</h2>
+        <span class="js-pge-count gallery-count" hidden></span>
     </div>
-
-    <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3 js-pge-toast-container"
-         style="z-index: 1080;">
-    </div>
-
+    <p class="product-gallery-editor__description">@(Model.AllowExistingReorder ? $"Drag images to reorder. Up to {Model.MaxGalleryImages} images." : $"Add up to {Model.MaxGalleryImages} gallery images.")</p>
+    <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3 js-pge-toast-container" style="z-index: 1080;"></div>
     @if (!string.IsNullOrWhiteSpace(Model.ExistingIdsFieldPrefix))
     {
         <div class="js-pge-existing-ids-container">
             @for (int i = 0; i < Model.ExistingImages.Count; i++)
             {
-                <input type="hidden"
-                       name="@($"{Model.ExistingIdsFieldPrefix}[{i}]")"
-                       value="@Model.ExistingImages[i].Id" />
+                <input type="hidden" name="@($"{Model.ExistingIdsFieldPrefix}[{i}]")" value="@Model.ExistingImages[i].Id" />
             }
         </div>
     }
-
-    <input type="file"
-           class="d-none js-pge-new-files-input"
-           name="@Model.NewFilesInputName"
-           multiple
-           accept=".jpg,.jpeg,.png,.webp" />
-
+    <input type="file" class="visually-hidden js-pge-new-files-input" name="@Model.NewFilesInputName" multiple accept=".jpg,.jpeg,.png,.webp" aria-label="Add gallery images" />
     <div class="product-gallery-editor__drop-zone js-pge-drop-zone">
-        <div class="product-gallery-editor__prompt js-pge-prompt" role="button" tabindex="0">
-            <div class="product-gallery-editor__icon" aria-hidden="true">
-                <svg xmlns="http://www.w3.org/2000/svg"
-                     width="40"
-                     height="40"
-                     viewBox="0 0 16 16"
-                     fill="currentColor">
-                    <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5" />
-                    <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708z" />
-                </svg>
-            </div>
-
-            <div class="product-gallery-editor__title">Drag &amp; drop images here</div>
-
-            <div class="product-gallery-editor__browse">
-                or
-                <button type="button"
-                        class="btn btn-link btn-sm p-0 align-baseline js-pge-browse-button">
-                    browse files
-                </button>
-            </div>
-
-            <div class="product-gallery-editor__hint">
-                JPG, PNG, WebP &middot; max 5 MB each
-            </div>
-        </div>
-
         @if (Model.IsEditMode)
         {
             <div class="product-gallery-editor__section js-pge-existing-section">
-                <div class="product-gallery-editor__section-header">
-                    <div>
-                        <div class="product-gallery-editor__section-title">Existing images</div>
-                        <div class="product-gallery-editor__section-hint">Drag to reorder</div>
-                    </div>
-                </div>
-
                 <div class="product-gallery-editor__grid js-pge-existing-grid">
-                    @foreach (var image in Model.ExistingImages)
+                    @for (int i = 0; i < Model.ExistingImages.Count; i++)
                     {
-                        <div class="product-gallery-editor__card product-gallery-editor__card--image js-pge-existing-item position-relative"
-                             data-image-id="@image.Id"
-                             title="Drag to reorder">
-
-                            <button type="button"
-                                    class="product-gallery-editor__remove-btn js-pge-remove-existing"
-                                    title="Remove image"
-                                    aria-label="Remove image">
-                                ×
+                        var image = Model.ExistingImages[i];
+                        <div class="product-gallery-editor__card product-gallery-editor__card--image js-pge-existing-item position-relative" data-image-id="@image.Id" tabindex="0" aria-label="Gallery image @(i + 1). Use left and right arrow keys to reorder.">
+                            <button type="button" class="product-gallery-editor__remove-btn js-pge-remove-existing" title="Remove image" aria-label="Remove gallery image @(i + 1)">
+                                <svg class="icon icon--small" aria-hidden="true"><use href="#i-close" /></svg>
                             </button>
-
-                            <img src="@image.Url"
-                                 alt=""
-                                 class="product-gallery-editor__thumb" />
+                            <img src="@image.Url" alt="Gallery image @(i + 1)" class="product-gallery-editor__thumb" draggable="false" />
                         </div>
                     }
                 </div>
             </div>
         }
-
         <div class="product-gallery-editor__section js-pge-new-section">
-            <div class="product-gallery-editor__section-header">
-                <div>
-                    <div class="product-gallery-editor__section-title">
-                        @(Model.IsEditMode ? "New images" : "Selected images")
-                    </div>
-                    <div class="product-gallery-editor__section-hint">
-                        @if (Model.IsEditMode)
-                        {
-                            <text>Not sortable. They will be added after existing images when you save.</text>
-                        }
-                        else
-                        {
-                            <text>These images will be uploaded when you save.</text>
-                        }
-                    </div>
-                </div>
-            </div>
-
             <div class="product-gallery-editor__grid js-pge-new-grid">
-                <button type="button"
-                        class="product-gallery-editor__card product-gallery-editor__add-card js-pge-add-card">
-                    <span class="product-gallery-editor__add-icon-wrap">
-                        <span class="product-gallery-editor__add-icon">+</span>
-                    </span>
-                    <span class="product-gallery-editor__add-text">Add images</span>
+                <button type="button" class="product-gallery-editor__card product-gallery-editor__add-card js-pge-add-card">
+                    <svg class="icon" aria-hidden="true"><use href="#i-upload" /></svg>
+                    <span>Add images</span>
                 </button>
             </div>
         </div>
     </div>
-
+    <p class="image-hint">JPG, PNG or WebP. Max 5 MB per image.</p>
+    @if (Model.IsEditMode)
+    {
+        <p class="gallery-new-note" hidden>New images are added after existing images when you save.</p>
+    }
+    <span class="visually-hidden js-pge-reorder-status" role="status" aria-live="polite"></span>
     @if (!string.IsNullOrWhiteSpace(Model.ValidationMessageFieldName))
     {
-        <span class="text-danger field-validation-valid"
-              data-valmsg-for="@Model.ValidationMessageFieldName"
-              data-valmsg-replace="true"></span>
+        <span class="text-danger field-validation-valid" data-valmsg-for="@Model.ValidationMessageFieldName" data-valmsg-replace="true"></span>
     }
 </div>

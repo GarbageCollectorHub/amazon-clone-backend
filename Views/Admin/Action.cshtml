@@ -1,7 +1,7 @@
 ﻿@model AMZN.Models.Action.ActionViewModel
 @using System.Security.Claims
 @{
-    ViewData["Title"] = "Add action";
+    ViewData["Title"] = "Create promotion";
 
     bool isAuthorized = Context.User.Identity?.IsAuthenticated == true;
     string? role = Context.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
@@ -15,9 +15,9 @@
 
     <div class="management-page__header">
         <div>
-            <h1 class="management-page__title">Add action</h1>
+            <h1 class="management-page__title">Create promotion</h1>
             <p class="management-page__subtitle">
-                Create a promotional action for a product or category.
+                Create a discount for a product or category.
             </p>
         </div>
     </div>
@@ -95,7 +95,7 @@
 
             <div class="action-bar">
                 <button type="submit" class="action-button action-button--primary">
-                    Add action
+                    Create promotion
                 </button>
             </div>
 

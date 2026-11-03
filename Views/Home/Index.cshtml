@@ -1,136 +1,74 @@
 ﻿@{
     ViewData["Title"] = "Dashboard";
 }
-
-@section Styles {
+@section Styles
+{
     <link rel="stylesheet" href="~/css/admin-home.css" asp-append-version="true" />
 }
-
-<div class="dashboard-page">
-    <section class="dashboard-topbar">
-        <div class="dashboard-topbar__content">
-            <span class="dashboard-topbar__eyebrow">Dashboard</span>
-            <h1 class="dashboard-topbar__title">Manage your store</h1>
+<div class="management-page">
+    <div class="management-page__header">
+        <div>
+            <h1 class="management-page__title">Manage your store</h1>
+            <p class="management-page__subtitle">Your products, catalog and management tools in one place.</p>
         </div>
-
-        <a asp-controller="AdminProducts"
-           asp-action="Create"
-           class="dashboard-topbar__button">
-            <i class="bi bi-plus-lg"></i>
-            Add product
-        </a>
-    </section>
-
-    <section class="dashboard-sections">
-        <div class="dashboard-panel">
-            <div class="dashboard-panel__header">
-                <div>
-                    <h2 class="dashboard-panel__title">Product management</h2>
-                    <p class="dashboard-panel__subtitle">Products and listings</p>
-                </div>
-            </div>
-
-            <div class="dashboard-actions">
-                <a asp-controller="AdminProducts" asp-action="Index" class="dashboard-action dashboard-action--primary">
-                    <span class="dashboard-action__icon">
-                        <i class="bi bi-grid-3x3-gap"></i>
+    </div>
+    <div class="dashboard-sections">
+        <section class="dashboard-section">
+            <h2>Product management</h2>
+            <p>Products and listings</p>
+            <a class="dashboard-link" asp-controller="AdminProducts" asp-action="Index">
+                <svg class="icon" aria-hidden="true"><use href="#i-box" /></svg>
+                <span>
+                    <strong>My products</strong>
+                    <small>Edit, restock or remove listings</small>
+                </span>
+            </a>
+            <a class="dashboard-link" asp-controller="AdminProducts" asp-action="Create">
+                <svg class="icon" aria-hidden="true"><use href="#i-plus" /></svg>
+                <span>
+                    <strong>Add product</strong>
+                    <small>Create a new product</small>
+                </span>
+            </a>
+        </section>
+        @if (User.IsInRole("Admin"))
+        {
+            <section class="dashboard-section">
+                <h2>Catalog</h2>
+                <p>Structure and metadata</p>
+                <a class="dashboard-link" asp-controller="AdminBrands" asp-action="Index">
+                    <svg class="icon" aria-hidden="true"><use href="#i-tag" /></svg>
+                    <span>
+                        <strong>Brands</strong>
+                        <small>Manage product brands</small>
                     </span>
-
-                    <span class="dashboard-action__body">
-                        <span class="dashboard-action__title">My products</span>
-                        <span class="dashboard-action__text">Edit, restock or remove listings</span>
-                    </span>
-
-                    <i class="bi bi-arrow-right dashboard-action__arrow"></i>
                 </a>
-
-                <a asp-controller="AdminProducts" asp-action="Create" class="dashboard-action">
-                    <span class="dashboard-action__icon">
-                        <i class="bi bi-box-seam"></i>
+                <a class="dashboard-link" asp-controller="Admin" asp-action="Category">
+                    <svg class="icon" aria-hidden="true"><use href="#i-layers" /></svg>
+                    <span>
+                        <strong>Categories</strong>
+                        <small>Manage the category tree</small>
                     </span>
-
-                    <span class="dashboard-action__body">
-                        <span class="dashboard-action__title">Add product</span>
-                        <span class="dashboard-action__text">Create a new product</span>
-                    </span>
-
-                    <i class="bi bi-arrow-right dashboard-action__arrow"></i>
                 </a>
-            </div>
-        </div>
-
-        <div class="dashboard-panel">
-            <div class="dashboard-panel__header">
-                <div>
-                    <h2 class="dashboard-panel__title">Catalog</h2>
-                    <p class="dashboard-panel__subtitle">Structure and metadata</p>
-                </div>
-            </div>
-
-            <div class="dashboard-actions">
-                <a asp-controller="AdminBrands" asp-action="Index" class="dashboard-action">
-                    <span class="dashboard-action__icon">
-                        <i class="bi bi-award"></i>
+            </section>
+            <section class="dashboard-section">
+                <h2>Administration</h2>
+                <p>Access and promotions</p>
+                <a class="dashboard-link" asp-controller="Admin" asp-action="SignUp">
+                    <svg class="icon" aria-hidden="true"><use href="#i-user" /></svg>
+                    <span>
+                        <strong>Add user</strong>
+                        <small>Register an account</small>
                     </span>
-
-                    <span class="dashboard-action__body">
-                        <span class="dashboard-action__title">Brands</span>
-                        <span class="dashboard-action__text">Manage product brands</span>
-                    </span>
-
-                    <i class="bi bi-arrow-right dashboard-action__arrow"></i>
                 </a>
-
-                <a asp-controller="Admin" asp-action="Category" class="dashboard-action">
-                    <span class="dashboard-action__icon">
-                        <i class="bi bi-folder-plus"></i>
+                <a class="dashboard-link" asp-controller="Admin" asp-action="Action">
+                    <svg class="icon" aria-hidden="true"><use href="#i-promotion" /></svg>
+                    <span>
+                        <strong>Promotions</strong>
+                        <small>Create product or category discounts</small>
                     </span>
-
-                    <span class="dashboard-action__body">
-                        <span class="dashboard-action__title">Categories</span>
-                        <span class="dashboard-action__text">Manage category tree</span>
-                    </span>
-
-                    <i class="bi bi-arrow-right dashboard-action__arrow"></i>
                 </a>
-            </div>
-        </div>
-
-        <div class="dashboard-panel">
-            <div class="dashboard-panel__header">
-                <div>
-                    <h2 class="dashboard-panel__title">Administration</h2>
-                    <p class="dashboard-panel__subtitle">Internal tools and access</p>
-                </div>
-            </div>
-
-            <div class="dashboard-actions">
-                <a asp-controller="Admin" asp-action="SignUp" class="dashboard-action">
-                    <span class="dashboard-action__icon">
-                        <i class="bi bi-person-plus"></i>
-                    </span>
-
-                    <span class="dashboard-action__body">
-                        <span class="dashboard-action__title">Add user</span>
-                        <span class="dashboard-action__text">Register admin or moderator</span>
-                    </span>
-
-                    <i class="bi bi-arrow-right dashboard-action__arrow"></i>
-                </a>
-
-                <a asp-controller="Admin" asp-action="Action" class="dashboard-action">
-                    <span class="dashboard-action__icon">
-                        <i class="bi bi-tag"></i>
-                    </span>
-
-                    <span class="dashboard-action__body">
-                        <span class="dashboard-action__title">Actions</span>
-                        <span class="dashboard-action__text">Create promotional discounts</span>
-                    </span>
-
-                    <i class="bi bi-arrow-right dashboard-action__arrow"></i>
-                </a>
-            </div>
-        </div>
-    </section>
+            </section>
+        }
+    </div>
 </div>
