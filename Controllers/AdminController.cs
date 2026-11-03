@@ -129,8 +129,15 @@ public class AdminController : Controller
             return Json(new { success = false, message = "Form model is null" });
         }
 
-        (bool success, object message) = await adminCategoryService.AddCategoryAsync(model);
-        return Json(new { success, message });
+        try
+        {
+            (bool success, object message) = await adminCategoryService.AddCategoryAsync(model);
+            return Json(new { success, message });
+        }
+        catch (InvalidOperationException exception)
+        {
+            return Json(new { success = false, message = exception.Message });
+        }
     }
 
     [Authorize(Roles = "Admin")]

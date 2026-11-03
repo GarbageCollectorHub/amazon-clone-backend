@@ -9,25 +9,28 @@ using Microsoft.Extensions.Configuration;
 public class CloudStorageService : ICloudStorageService
 {
     private const string ContainerName = "amzn-storage";
-    private readonly BlobContainerClient _containerClient;
+    private readonly BlobContainerClient? _containerClient;
+    private readonly ILogger<CloudStorageService> _logger;
 
+    private BlobContainerClient ContainerClient => _containerClient
+        ?? throw new InvalidOperationException("Image storage is not configured. Image uploads are unavailable.");
 
-    public CloudStorageService(IConfiguration configuration)
+    public CloudStorageService(IConfiguration configuration, ILogger<CloudStorageService> logger)
     {
-        var connectionString = configuration.GetConnectionString("AzureStorage")
-            ?? throw new InvalidOperationException("AzureStorage connection string is missing");
+        _logger = logger;
+        var connectionString = configuration.GetConnectionString("AzureStorage");
 
-        _containerClient = new BlobContainerClient(connectionString, ContainerName);
-        _containerClient.CreateIfNotExists();
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            _logger.LogWarning("Azure Blob Storage is not configured. Image uploads are unavailable.");
+            return;
+        }
 
-        try
+        var options = new BlobClientOptions
         {
-            _containerClient.SetAccessPolicy(PublicAccessType.Blob);
-        }
-        catch (RequestFailedException)
-        {
-            // если PublicAccess запрещен
-        }
+            Retry = { MaxRetries = 1, NetworkTimeout = TimeSpan.FromSeconds(5) }
+        };
+        _containerClient = new BlobContainerClient(connectionString, ContainerName, options);
     }
 
     public async Task<string> SaveImageAsync(IFormFile file, CancellationToken cancellationToken = default)
@@ -38,7 +41,7 @@ public class CloudStorageService : ICloudStorageService
         var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
         var blobName = $"{Guid.NewGuid():N}{ext}";
 
-        BlobClient blob = _containerClient.GetBlobClient(blobName);
+        BlobClient blob = ContainerClient.GetBlobClient(blobName);
 
         var contentType = file.ContentType;
 
@@ -59,15 +62,25 @@ public class CloudStorageService : ICloudStorageService
             HttpHeaders = new BlobHttpHeaders { ContentType = contentType }
         };
 
-        await using Stream stream = file.OpenReadStream();
-        await blob.UploadAsync(stream, options, cancellationToken);
+        try
+        {
+            await ContainerClient.CreateIfNotExistsAsync(PublicAccessType.Blob, cancellationToken: cancellationToken);
 
-        return blob.Uri.AbsoluteUri;
+            await using Stream stream = file.OpenReadStream();
+            await blob.UploadAsync(stream, options, cancellationToken);
+
+            return blob.Uri.AbsoluteUri;
+        }
+        catch (Exception exception) when (exception is RequestFailedException or AggregateException)
+        {
+            _logger.LogWarning(exception, "Failed to upload an image to Azure Blob Storage");
+            throw new InvalidOperationException("Image storage is unavailable. Please try again later.", exception);
+        }
     }
 
     public async Task<Stream?> GetFileAsync(string fileName, CancellationToken cancellationToken = default)
     {
-        BlobClient blob = _containerClient.GetBlobClient(fileName);
+        BlobClient blob = ContainerClient.GetBlobClient(fileName);
 
         if (!await blob.ExistsAsync(cancellationToken))
             return null;
@@ -91,7 +104,7 @@ public class CloudStorageService : ICloudStorageService
         if (string.IsNullOrWhiteSpace(blobName))
             return false;
 
-        BlobClient blob = _containerClient.GetBlobClient(blobName);
+        BlobClient blob = ContainerClient.GetBlobClient(blobName);
         Response<bool> result = await blob.DeleteIfExistsAsync(cancellationToken: cancellationToken);
 
         return result.Value;
