@@ -1,6 +1,6 @@
 # AMZN - E-commerce Backend
 
-An Amazon-inspired e-commerce backend built with ASP.NET Core. The application provides a REST API for a separate React storefront and an MVC interface for catalog management.
+An Amazon-inspired e-commerce backend built with ASP.NET Core, Entity Framework Core and SQL Server. It provides a REST API for a separate React storefront and an MVC interface for catalog management.
 
 Built collaboratively by three frontend developers and two backend developers, following a shared Figma design. This repository contains the backend and MVC management interface; the storefront is maintained separately.
 
@@ -13,6 +13,37 @@ My primary responsibility was the backend core, including:
 - Product catalog, filtering, sorting, pagination, search suggestions, and homepage APIs.
 - Product ratings, reviews, and questions and answers.
 - Product management, image galleries, and Azure Blob Storage integration.
+
+## Project preview
+
+Catalog browsing with category, brand, rating and price filters, plus sorting options.
+
+<a href="docs/images/storefront-catalog.png">
+  <img src="docs/images/storefront-catalog.png" alt="React storefront catalog with product filters and sorting" width="900">
+</a>
+
+Storefront screenshots are from the team demo. The React frontend was developed by the frontend team and is maintained separately.
+
+Click any preview below to open the full-size screenshot.
+
+<table>
+  <tr>
+    <th width="50%">Storefront search</th>
+    <th width="50%">MVC management interface</th>
+  </tr>
+  <tr>
+    <td valign="top">
+      <a href="docs/images/storefront-search.png"><img src="docs/images/storefront-search.png" alt="Storefront search suggestions with matching products" width="420"></a><br>
+      Product suggestions as the user types.<br>
+      <a href="docs/images/storefront-search.png">Open full-size screenshot</a>
+    </td>
+    <td valign="top">
+      <a href="docs/images/admin-dashboard.png"><img src="docs/images/admin-dashboard.png" alt="MVC management dashboard in dark mode" width="420"></a><br>
+      Product and catalog management, with light and dark themes.<br>
+      <a href="docs/images/admin-dashboard.png">Open full-size screenshot</a>
+    </td>
+  </tr>
+</table>
 
 ## Tech stack
 
@@ -31,8 +62,7 @@ My primary responsibility was the backend core, including:
 - Product questions and answers with seller-response identification.
 - User profiles, delivery addresses, and demo payment-method records.
 - Shopping cart, order creation, confirmation, cancellation, and order history.
-- MVC management pages for products, categories, brands, and promotions.
-- Light and dark themes in the MVC management interface.
+- MVC management pages for products, categories, brands, and promotions, with light and dark themes.
 - Scheduled promotion activation and expiration.
 
 ## Architecture and implementation
@@ -65,55 +95,51 @@ Rating and review updates use database transactions and SQL Server locking hints
 
 Adding delivery addresses and payment methods uses transactions and per-user locking to coordinate duplicate checks and default selections.
 
+### Database diagram
+
+The SQL Server schema includes 20 application tables and 27 foreign-key relationships. Click the diagram to open its full-size SVG version.
+
+<a href="docs/images/database-schema.svg">
+  <img src="docs/images/database-schema.png" alt="SQL Server database tables, columns and relationships" width="1000">
+</a>
+
+**[Open full-size database diagram (SVG)](docs/images/database-schema.svg)**
+
+[Schema details and notation](docs/database-schema.md) | [Editable Workbench model](docs/diagrams/amzn-database.mwb)
+
 ### Queries and background processing
 
 Question previews retrieve up to three answers per question, with ordering and limits applied in the database query.
 
 A hosted background service checks promotion validity at startup and every minute while the application is running, applying or removing discounts according to their start and end dates.
 
-## Screenshots
+## API explorer
 
-Product catalog, ratings, reviews, questions and answers. Click an image to open its file.
+Swagger UI documents the API and supports authenticated requests through its **Authorize** dialog.
 
-<a href="docs/images/swagger-products.png">
-  <img src="docs/images/swagger-products.png"
-       alt="Product catalog, reviews, questions and search endpoints"
-       width="760">
-</a>
+Click a preview or its **Open full size** link to read the endpoint list.
 
-<details>
-<summary>More API endpoints</summary>
-
-Authentication and catalog management.
-
-<a href="docs/images/swagger-auth-management.png">
-  <img src="docs/images/swagger-auth-management.png"
-       alt="Authentication and management endpoints"
-       width="760">
-</a>
-
-Cart, categories, homepage and orders.
-
-<a href="docs/images/swagger-cart-orders.png">
-  <img src="docs/images/swagger-cart-orders.png"
-       alt="Cart, categories, homepage and order endpoints"
-       width="760">
-</a>
-
-</details>
-
-<details>
-<summary>MVC administration interface</summary>
-
-Management dashboard with light and dark theme support.
-
-<a href="docs/images/admin-dashboard.png">
-  <img src="docs/images/admin-dashboard.png"
-       alt="MVC management dashboard in dark mode"
-       width="760">
-</a>
-
-</details>
+<table>
+  <tr>
+    <th width="33%">Products and community</th>
+    <th width="33%">Authentication and management</th>
+    <th width="33%">Cart and orders</th>
+  </tr>
+  <tr>
+    <td valign="top">
+      <a href="docs/images/swagger-products.png"><img src="docs/images/swagger-products.png" alt="Product catalog, reviews, questions and search endpoints" width="280"></a><br>
+      <a href="docs/images/swagger-products.png">Open full size</a>
+    </td>
+    <td valign="top">
+      <a href="docs/images/swagger-auth-management.png"><img src="docs/images/swagger-auth-management.png" alt="Authentication and catalog management endpoints" width="280"></a><br>
+      <a href="docs/images/swagger-auth-management.png">Open full size</a>
+    </td>
+    <td valign="top">
+      <a href="docs/images/swagger-cart-orders.png"><img src="docs/images/swagger-cart-orders.png" alt="Cart, categories, homepage and order endpoints" width="280"></a><br>
+      <a href="docs/images/swagger-cart-orders.png">Open full size</a>
+    </td>
+  </tr>
+</table>
 
 ## Running locally
 
