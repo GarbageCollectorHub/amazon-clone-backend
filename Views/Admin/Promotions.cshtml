@@ -1,4 +1,4 @@
-﻿@model AMZN.Models.Action.ActionViewModel
+﻿@model AMZN.Models.Promotions.PromotionViewModel
 @using System.Security.Claims
 @{
     ViewData["Title"] = "Create promotion";
@@ -31,22 +31,22 @@
     else if (role != "Admin")
     {
         <div class="alert-box alert-box--danger" role="alert">
-            Admin role is required to manage actions.
+            Admin role is required to manage promotions.
         </div>
     }
     else
     {
-        <div id="action-feedback"></div>
+        <div id="promotion-feedback"></div>
 
-        <form id="add-action-form">
+        <form id="add-promotion-form">
             @Html.AntiForgeryToken()
 
             <section class="panel panel--full">
 
                 <div class="form-grid form-grid--2">
                     <div class="field-group">
-                        <label class="form-label" for="action-name">Name</label>
-                        <input id="action-name" name="action-name" class="form-control" />
+                        <label class="form-label" for="promotion-name">Name</label>
+                        <input id="promotion-name" name="promotion-name" class="form-control" />
                     </div>
                     <div class="field-group">
                         <label class="form-label" for="apply-to">Apply to</label>
@@ -63,8 +63,8 @@
                         <input id="product-title" name="product-title" class="form-control" />
                     </div>
                     <div class="field-group">
-                        <label class="form-label" for="action-amount">Discount (%)</label>
-                        <input id="action-amount" name="action-amount"
+                        <label class="form-label" for="promotion-discount-percent">Discount (%)</label>
+                        <input id="promotion-discount-percent" name="promotion-discount-percent"
                                type="number" min="1" max="99"
                                class="form-control" />
                     </div>
@@ -72,21 +72,21 @@
 
                 <div class="form-grid form-grid--2 mt-3">
                     <div class="field-group">
-                        <label class="form-label" for="action-start-date">Start date</label>
-                        <input id="action-start-date" name="action-start-date"
+                        <label class="form-label" for="promotion-start-date">Start date</label>
+                        <input id="promotion-start-date" name="promotion-start-date"
                                type="date" class="form-control" />
                     </div>
                     <div class="field-group">
-                        <label class="form-label" for="action-end-date">End date</label>
-                        <input id="action-end-date" name="action-end-date"
+                        <label class="form-label" for="promotion-end-date">End date</label>
+                        <input id="promotion-end-date" name="promotion-end-date"
                                type="date" class="form-control" />
                     </div>
                 </div>
 
                 <div class="form-grid mt-3">
                     <div class="field-group">
-                        <label class="form-label" for="action-description">Description</label>
-                        <textarea id="action-description" name="action-description"
+                        <label class="form-label" for="promotion-description">Description</label>
+                        <textarea id="promotion-description" name="promotion-description"
                               class="form-control"></textarea>
                     </div>
                 </div>

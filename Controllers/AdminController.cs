@@ -1,5 +1,5 @@
 using AMZN.DTOs.Auth;
-using AMZN.Models.Action;
+using AMZN.Models.Promotions;
 using AMZN.Models.Category;
 using AMZN.Models.User;
 using AMZN.Services.Admin;
@@ -19,18 +19,18 @@ public class AdminController : Controller
     private readonly IAuthService _authService;
     private readonly ILogger<AdminController> _logger;
     private readonly AdminUserService _adminUserService;
-    private readonly AdminActionService _adminActionService;
+    private readonly AdminPromotionService _adminPromotionService;
 
     public AdminController(
         IAuthService authService,
         ILogger<AdminController> logger,
         AdminUserService adminUserService,
-        AdminActionService adminActionService)
+        AdminPromotionService adminPromotionService)
     {
         _authService = authService;
         _logger = logger;
         _adminUserService = adminUserService;
-        _adminActionService = adminActionService;
+        _adminPromotionService = adminPromotionService;
     }
 
     public IActionResult SignUp()
@@ -141,23 +141,23 @@ public class AdminController : Controller
     }
 
     [Authorize(Roles = "Admin")]
-    public IActionResult Action()
+    public IActionResult Promotions()
     {
-        ActionViewModel viewModel = new();
+        PromotionViewModel viewModel = new();
         return View(viewModel);
     }
 
     [HttpPost]
     [Authorize(Roles = "Admin")]
     [ValidateAntiForgeryToken]
-    public JsonResult AddAction(ActionFormModel? model)
+    public JsonResult AddPromotion(PromotionFormModel? model)
     {
         if (model == null)
         {
             return Json(new { success = false, message = "Form model is null" });
         }
 
-        (bool success, object message) = _adminActionService.AddAction(model);
+        (bool success, object message) = _adminPromotionService.AddPromotion(model);
         return Json(new { success, message });
     }
 

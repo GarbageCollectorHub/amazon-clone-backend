@@ -1,6 +1,5 @@
 ﻿using AMZN.Data.Entities;
 using Microsoft.EntityFrameworkCore;
-using Action = AMZN.Data.Entities.Action;
 
 namespace AMZN.Data;
 
@@ -17,12 +16,12 @@ public class DataContext: DbContext
     public DbSet<ProductQuestionAnswer> ProductQuestionAnswers { get; private set; } = null!;
 
     public DbSet<Category> Categories { get; private set; } = null!;
-    public DbSet<Action> Actions { get; private set; } = null!;
+    public DbSet<Promotion> Promotions { get; private set; } = null!;
     public DbSet<Brand> Brands { get; private set; } = null!;
 
-    public DbSet<ProductAction> ProductActions { get; private set; } = null!;
+    public DbSet<ProductPromotion> ProductPromotions { get; private set; } = null!;
     
-    public DbSet<CategoryAction> CategoryActions { get; private set; } = null!;
+    public DbSet<CategoryPromotion> CategoryPromotions { get; private set; } = null!;
     
     public DbSet<DeletedUser>  DeletedUsers { get; private set; } = null!;
     
@@ -248,28 +247,28 @@ public class DataContext: DbContext
             .WithMany()
             .HasForeignKey(c => c.ParentId);
         
-        modelBuilder.Entity<ProductAction>()
+        modelBuilder.Entity<ProductPromotion>()
             .HasOne(pa => pa.Product)
             .WithMany()
             .HasForeignKey(pa => pa.ProductId)
             .HasPrincipalKey(p => p.Id);
         
-        modelBuilder.Entity<ProductAction>()
-            .HasOne(pa => pa.Action)
+        modelBuilder.Entity<ProductPromotion>()
+            .HasOne(pa => pa.Promotion)
             .WithMany()
-            .HasForeignKey(pa => pa.ActionId)
+            .HasForeignKey(pa => pa.PromotionId)
             .HasPrincipalKey(a => a.Id);
         
-        modelBuilder.Entity<CategoryAction>()
+        modelBuilder.Entity<CategoryPromotion>()
             .HasOne(ca => ca.Category)
             .WithMany()
             .HasForeignKey(ca => ca.CategoryId)
             .HasPrincipalKey(c => c.Id);
         
-        modelBuilder.Entity<CategoryAction>()
-            .HasOne(ca => ca.Action)
+        modelBuilder.Entity<CategoryPromotion>()
+            .HasOne(ca => ca.Promotion)
             .WithMany()
-            .HasForeignKey(ca => ca.ActionId)
+            .HasForeignKey(ca => ca.PromotionId)
             .HasPrincipalKey(a => a.Id);
 
 

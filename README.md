@@ -116,7 +116,7 @@ See form errors, image previews and mobile layouts. Click a preview to open that
 - User profiles, delivery addresses, and demo payment-method records.
 - Shopping cart, order creation, confirmation, cancellation, and order history.
 - MVC management pages for products, categories, brands, and promotions, with light and dark themes.
-- Scheduled promotion activation and expiration.
+- Promotion date checks at startup, with optional periodic checks.
 
 ### MVC management interface
 
@@ -173,7 +173,7 @@ The SQL Server schema includes 20 application tables and 27 foreign-key relation
 
 Question previews show up to three answers per question. The database query handles sorting and the three-answer limit.
 
-A background service checks promotion dates at startup and every minute while the application is running. It applies or removes discounts based on their start and end dates.
+A background service checks promotion dates once when the application starts. Set `Promotions:EnablePeriodicChecks` to `true` to repeat the check every minute while the application is running. The service applies or removes discounts based on their start and end dates.
 
 ## API explorer
 

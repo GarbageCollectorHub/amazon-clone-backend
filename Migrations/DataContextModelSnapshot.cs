@@ -23,43 +23,6 @@ namespace AMZN.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("AMZN.Data.Entities.Action", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("Amount")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("EndDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsApplied")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ProductTitle")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Actions", "AMZN");
-                });
-
             modelBuilder.Entity("AMZN.Data.Entities.Brand", b =>
                 {
                     b.Property<Guid>("Id")
@@ -156,25 +119,25 @@ namespace AMZN.Migrations
                     b.ToTable("Categories", "AMZN");
                 });
 
-            modelBuilder.Entity("AMZN.Data.Entities.CategoryAction", b =>
+            modelBuilder.Entity("AMZN.Data.Entities.CategoryPromotion", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("ActionId")
+                    b.Property<Guid>("CategoryId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("CategoryId")
+                    b.Property<Guid>("PromotionId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ActionId");
-
                     b.HasIndex("CategoryId");
 
-                    b.ToTable("CategoryActions", "AMZN");
+                    b.HasIndex("PromotionId");
+
+                    b.ToTable("CategoryPromotions", "AMZN");
                 });
 
             modelBuilder.Entity("AMZN.Data.Entities.DeletedUser", b =>
@@ -438,27 +401,6 @@ namespace AMZN.Migrations
                         });
                 });
 
-            modelBuilder.Entity("AMZN.Data.Entities.ProductAction", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("ActionId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("ProductId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ActionId");
-
-                    b.HasIndex("ProductId");
-
-                    b.ToTable("ProductActions", "AMZN");
-                });
-
             modelBuilder.Entity("AMZN.Data.Entities.ProductImage", b =>
                 {
                     b.Property<Guid>("Id")
@@ -487,6 +429,27 @@ namespace AMZN.Migrations
                         {
                             t.HasCheckConstraint("CK_ProductImage_SortOrder", "SortOrder >= 0");
                         });
+                });
+
+            modelBuilder.Entity("AMZN.Data.Entities.ProductPromotion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("PromotionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("PromotionId");
+
+                    b.ToTable("ProductPromotions", "AMZN");
                 });
 
             modelBuilder.Entity("AMZN.Data.Entities.ProductQuestion", b =>
@@ -621,6 +584,43 @@ namespace AMZN.Migrations
                     b.ToTable("ProductReviews", "AMZN");
                 });
 
+            modelBuilder.Entity("AMZN.Data.Entities.Promotion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("DiscountPercent")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsApplied")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ProductTitle")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Promotions", "AMZN");
+                });
+
             modelBuilder.Entity("AMZN.Data.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -733,23 +733,23 @@ namespace AMZN.Migrations
                     b.Navigation("ParentCategory");
                 });
 
-            modelBuilder.Entity("AMZN.Data.Entities.CategoryAction", b =>
+            modelBuilder.Entity("AMZN.Data.Entities.CategoryPromotion", b =>
                 {
-                    b.HasOne("AMZN.Data.Entities.Action", "Action")
-                        .WithMany()
-                        .HasForeignKey("ActionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("AMZN.Data.Entities.Category", "Category")
                         .WithMany()
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Action");
+                    b.HasOne("AMZN.Data.Entities.Promotion", "Promotion")
+                        .WithMany()
+                        .HasForeignKey("PromotionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Category");
+
+                    b.Navigation("Promotion");
                 });
 
             modelBuilder.Entity("AMZN.Data.Entities.DeliveryAddress", b =>
@@ -837,25 +837,6 @@ namespace AMZN.Migrations
                     b.Navigation("Seller");
                 });
 
-            modelBuilder.Entity("AMZN.Data.Entities.ProductAction", b =>
-                {
-                    b.HasOne("AMZN.Data.Entities.Action", "Action")
-                        .WithMany()
-                        .HasForeignKey("ActionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("AMZN.Data.Entities.Product", "Product")
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Action");
-
-                    b.Navigation("Product");
-                });
-
             modelBuilder.Entity("AMZN.Data.Entities.ProductImage", b =>
                 {
                     b.HasOne("AMZN.Data.Entities.Product", "Product")
@@ -865,6 +846,25 @@ namespace AMZN.Migrations
                         .IsRequired();
 
                     b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("AMZN.Data.Entities.ProductPromotion", b =>
+                {
+                    b.HasOne("AMZN.Data.Entities.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AMZN.Data.Entities.Promotion", "Promotion")
+                        .WithMany()
+                        .HasForeignKey("PromotionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("Promotion");
                 });
 
             modelBuilder.Entity("AMZN.Data.Entities.ProductQuestion", b =>

@@ -123,16 +123,16 @@ document.addEventListener("submit", e => {
                 if (submitBtn) submitBtn.disabled = false;
             });
     }
-    // Action
-    if (form.id === "add-action-form") {
+    // Promotion
+    if (form.id === "add-promotion-form") {
         e.preventDefault();
 
-        const feedback = document.getElementById("action-feedback");
+        const feedback = document.getElementById("promotion-feedback");
         const submitBtn = form.querySelector('[type="submit"]');
 
         if (submitBtn) submitBtn.disabled = true;
 
-        fetch("/Admin/AddAction", {
+        fetch("/Admin/AddPromotion", {
             method: "POST",
             body: new FormData(form)
         })
@@ -141,7 +141,7 @@ document.addEventListener("submit", e => {
                 if (j.success) {
                     if (feedback) {
                         feedback.innerHTML =
-                            '<div class="alert-box alert-box--success">Action added successfully!</div>';
+                            '<div class="alert-box alert-box--success">Promotion added successfully!</div>';
                     }
                     form.reset();
                 } else {

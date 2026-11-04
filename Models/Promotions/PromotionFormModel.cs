@@ -1,21 +1,21 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace AMZN.Models.Action;
+namespace AMZN.Models.Promotions;
 
-public class ActionFormModel
+public class PromotionFormModel
 {
-    [FromForm(Name = "action-name")]
+    [FromForm(Name = "promotion-name")]
     public string Name { get; set; } = null!;
-    [FromForm(Name = "action-description")]
+    [FromForm(Name = "promotion-description")]
     public string? Description { get; set; } = null!;
     [FromForm(Name = "apply-to")]
     public string ApplyTo { get; set; } = null!;
     [FromForm(Name = "product-title")]
     public string ProductTitle { get; set; } = null!;
-    [FromForm(Name = "action-amount")]
-    public int Amount { get; set; }
-    [FromForm(Name = "action-start-date")]
+    [FromForm(Name = "promotion-discount-percent")]
+    public int DiscountPercent { get; set; }
+    [FromForm(Name = "promotion-start-date")]
     public DateTime StartDate { get; set; }
-    [FromForm(Name = "action-end-date")]
+    [FromForm(Name = "promotion-end-date")]
     public DateTime EndDate { get; set; }
 }

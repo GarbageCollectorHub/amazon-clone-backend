@@ -1,5 +1,5 @@
 ﻿using AMZN.Data;
-using AMZN.Models.Action;
+using AMZN.Models.Promotions;
 using AMZN.Models.Category;
 using AMZN.Models.User;
 
@@ -160,7 +160,7 @@ public class FormsValidators
         return errors;
     }
 
-    public Dictionary<string, string> ValidateAction(ActionFormModel? formModel)
+    public Dictionary<string, string> ValidatePromotion(PromotionFormModel? formModel)
     {
         Dictionary<string, string> errors = new();
         if (formModel != null)
@@ -177,7 +177,7 @@ public class FormsValidators
                     errors.Add("name", "Name must be between 2 and 20 characters");
                 }
 
-                if (_dataContext.Actions.FirstOrDefault(a => a.Name == formModel.Name) != null)
+                if (_dataContext.Promotions.FirstOrDefault(a => a.Name == formModel.Name) != null)
                 {
                     errors.Add("name", "Name already taken");
                 }
@@ -228,9 +228,9 @@ public class FormsValidators
                 }
             }
 
-            if (formModel.Amount <= 0 || formModel.Amount >= 100)
+            if (formModel.DiscountPercent <= 0 || formModel.DiscountPercent >= 100)
             {
-                errors.Add("amount", "Amount must be between 1 and 99");
+                errors.Add("discountPercent", "Discount must be between 1 and 99");
             }
 
             if (formModel.StartDate == default)
