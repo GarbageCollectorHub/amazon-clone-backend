@@ -32,10 +32,17 @@ document.addEventListener("submit", e => {
                     form.reset();
                 } else {
                     if (feedback) {
-                        feedback.innerHTML =
-                            '<div class="alert-box alert-box--danger">' +
-                            (j.message || "Something went wrong.") +
-                            '</div>';
+                        const alert = document.createElement("div");
+                        alert.className = "alert-box alert-box--danger";
+                        const messages = Array.isArray(j.message)
+                            ? j.message
+                            : [j.message || "Something went wrong."];
+                        messages.forEach(message => {
+                            const line = document.createElement("div");
+                            line.textContent = message;
+                            alert.appendChild(line);
+                        });
+                        feedback.replaceChildren(alert);
                     }
                 }
             })

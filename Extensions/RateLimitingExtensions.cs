@@ -36,7 +36,7 @@ namespace AMZN.Extensions
                         Errors = null
                     };
 
-                    await http.Response.WriteAsync(JsonSerializer.Serialize(payload), cancellationToken);
+                    await http.Response.WriteAsync(JsonSerializer.Serialize(payload, JsonSerializerOptions.Web), cancellationToken);
                 };
 
                 options.AddPolicy("Auth", context =>

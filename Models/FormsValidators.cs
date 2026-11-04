@@ -34,14 +34,14 @@ public class FormsValidators
             
             if (string.IsNullOrEmpty(formModel.LastName))
             {
-                errors.Add("firstName", "First name is required");
+                errors.Add("lastName", "Last name is required");
             }
 
             if (!string.IsNullOrEmpty(formModel.LastName))
             {
                 if (formModel.LastName.Length < 2 || formModel.LastName.Length > 20)
                 {
-                    errors.Add("firstName", "First name must be between 2 and 20 characters");
+                    errors.Add("lastName", "Last name must be between 2 and 20 characters");
                 }
             }
             
@@ -60,25 +60,25 @@ public class FormsValidators
             
             if (string.IsNullOrEmpty(formModel.Password))
             {
-                errors.Add("password", "password is required");
+                errors.Add("password", "Password is required");
             }
 
-            if (!(formModel.Password.Length >= 8 && formModel.Password.Length <= 20))
+            else if (!(formModel.Password.Length >= 8 && formModel.Password.Length <= 20))
             {
                 errors.Add("password", "Password must be between 8 and 20 characters");
             }
             
             if (string.IsNullOrEmpty(formModel.ConfirmPassword))
             {
-                errors.Add("passwordConfirm", "password's confirmation is required");
+                errors.Add("passwordConfirm", "Password confirmation is required");
             }
 
-            if (!(formModel.ConfirmPassword.Length >= 8 && formModel.ConfirmPassword.Length <= 20))
+            else if (!(formModel.ConfirmPassword.Length >= 8 && formModel.ConfirmPassword.Length <= 20))
             {
-                errors.Add("passwordConfirm", "Password must be between 8 and 20 characters");
+                errors.Add("passwordConfirm", "Password confirmation must be between 8 and 20 characters");
             }
             
-            if (!string.Equals(formModel.Password, formModel.ConfirmPassword))
+            else if (!string.Equals(formModel.Password, formModel.ConfirmPassword))
             {
                 errors.Add("passwordConfirm", "Passwords do not match");
             }

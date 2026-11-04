@@ -24,6 +24,7 @@ using AMZN.Services.Search;
 using AMZN.Services.Storage.Cloud;
 using AMZN.Shared.Transactions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -92,8 +93,17 @@ builder.Services.AddSwaggerExamplesFromAssemblyOf<Program>();
 
 
 builder.Services.AddDbContext<DataContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
-        sqlOptions => sqlOptions.CommandTimeout(30)));
+{
+    var connection = new SqlConnection(builder.Configuration.GetConnectionString("DefaultConnection"));
+    // Retry opening the connection while Azure SQL resumes from auto-pause.
+    connection.RetryLogicProvider = SqlConfigurableRetryFactory.CreateFixedRetryProvider(new SqlRetryLogicOption
+    {
+        NumberOfTries = 5,
+        DeltaTime = TimeSpan.FromSeconds(10)
+    });
+    options.UseSqlServer(connection, contextOwnsConnection: true,
+        sqlOptions => sqlOptions.CommandTimeout(30));
+});
 
 
 //  Cors
