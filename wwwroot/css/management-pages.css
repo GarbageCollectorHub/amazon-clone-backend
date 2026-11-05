@@ -472,6 +472,10 @@ textarea.form-control {
     margin: 12px 0 0;
     color: var(--ui-muted);
 }
+/* The root gutter reserves scrollbar space instead of Bootstrap's inline padding. */
+body.theme-scope.modal-open, .theme-scope .modal {
+    padding-right: 0 !important;
+}
 .product-delete-modal .modal-content, .modal-content {
     background: var(--ui-surface);
     color: var(--ui-text);
@@ -532,6 +536,12 @@ textarea.form-control {
     .topbar-location .page-breadcrumb {
         display: none;
     }
+    .api-docs-label--full, .api-docs-external {
+        display: none;
+    }
+    .api-docs-label--short {
+        display: inline;
+    }
     .management-page__title {
         font-size: 36px;
     }
@@ -552,12 +562,6 @@ textarea.form-control {
     .topbar-brand {
         font-size: 24px;
         gap: 6px;
-    }
-    .api-docs-label--full, .api-docs-external {
-        display: none;
-    }
-    .api-docs-label--short {
-        display: inline;
     }
     .topbar-actions .api-docs-button {
         gap: 6px;
