@@ -285,7 +285,7 @@ Local URLs:
 - [Swagger UI](https://localhost:7202/swagger)
 - [OpenAPI document](https://localhost:7202/swagger/v1/swagger.json)
 
-Swagger is enabled in the Development environment.
+Swagger and the API documentation links are controlled by `Swagger:Enabled` in the application settings.
 
 ### 4. Enable image uploads
 

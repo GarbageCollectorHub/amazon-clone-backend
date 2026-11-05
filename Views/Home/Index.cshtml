@@ -1,4 +1,5 @@
-﻿@{
+﻿@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+@{
     ViewData["Title"] = "Dashboard";
 }
 @section Styles
@@ -8,10 +9,26 @@
 <div class="management-page">
     <div class="management-page__header">
         <div>
-            <h1 class="management-page__title">Manage your store</h1>
+            <h1 class="management-page__title">Admin dashboard</h1>
             <p class="management-page__subtitle">Your products, catalog and management tools in one place.</p>
         </div>
     </div>
+    @if (Configuration.GetValue<bool>("Swagger:Enabled"))
+    {
+        <section class="api-overview" aria-labelledby="api-overview-title">
+            <div class="api-overview__icon" aria-hidden="true">
+                <svg class="icon"><use href="#i-code" /></svg>
+            </div>
+            <div class="api-overview__copy">
+                <h2 id="api-overview-title">Explore the AMZN API</h2>
+                <p>This admin panel manages the store catalog. The REST API serves the React storefront.</p>
+            </div>
+            <a class="action-button action-button--secondary api-docs-button" href="@Url.Content("~/swagger")" target="_blank" rel="noopener" aria-label="Open Swagger (opens a new tab)">
+                Open Swagger
+                <svg class="icon icon--small" aria-hidden="true"><use href="#i-external" /></svg>
+            </a>
+        </section>
+    }
     <div class="dashboard-sections">
         <section class="dashboard-section">
             <h2>Product management</h2>

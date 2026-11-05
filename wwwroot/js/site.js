@@ -69,7 +69,12 @@ document.addEventListener("submit", e => {
             method: 'POST',
             body: new FormData(form)
         })
-            .then(r => r.json())
+            .then(r => {
+                if (r.status >= 500) {
+                    return { status: r.status, message: "Server error. Please try again later." };
+                }
+                return r.json();
+            })
             .then(j => {
                 if (j.status === 200) {
                     window.location.reload();
@@ -80,9 +85,11 @@ document.addEventListener("submit", e => {
                     }
                 }
             })
-            .catch(() => {
+            .catch(error => {
                 if (messageEl) {
-                    messageEl.textContent = "Request failed. Please try again.";
+                    messageEl.textContent = error instanceof TypeError
+                        ? "Unable to reach the server. Check your connection and try again."
+                        : "Request failed. Please try again.";
                     messageEl.className = "text-danger small";
                 }
             })

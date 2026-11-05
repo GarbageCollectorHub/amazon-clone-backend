@@ -27,6 +27,23 @@
 .brand:hover {
     color: var(--ui-text);
 }
+.brand--admin {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+}
+.brand-wordmark {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+}
+.brand-caption {
+    color: var(--ui-muted);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: 1.8px;
+}
 .brand-mark {
     width: 17px;
     height: 17px;
@@ -38,7 +55,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 4px 20px 40px;
+    padding: 4px 20px 24px;
 }
 .sidebar-nav {
     display: grid;
@@ -149,6 +166,20 @@
     background: var(--ui-soft);
     color: var(--ui-text);
 }
+.topbar-button.api-docs-button, .action-button.api-docs-button {
+    border-color: var(--bs-primary-border-subtle);
+    background: var(--ui-selected);
+    color: var(--bs-primary-text-emphasis);
+    font-weight: 600;
+}
+.topbar-button.api-docs-button:hover, .action-button.api-docs-button:hover {
+    border-color: var(--ui-accent);
+    background: var(--ui-selected);
+    color: var(--bs-link-hover-color);
+}
+.api-docs-label--short {
+    display: none;
+}
 .topbar-account {
     margin-left: 8px;
     padding-left: 16px;
@@ -165,6 +196,10 @@
 .topbar-brand {
     font-size: 28px;
 }
+.topbar-brand .brand-caption {
+    font-size: 9px;
+    letter-spacing: 1.2px;
+}
 .topbar-brand .brand-mark {
     width: 13px;
     height: 13px;
@@ -173,6 +208,7 @@
     padding: 28px;
     min-width: 0;
     max-width: 1440px;
+    margin-inline: auto;
 }
 .page-breadcrumb {
     display: flex;
@@ -472,7 +508,7 @@ textarea.form-control {
         height: 100dvh;
         overflow-y: auto;
     }
-    .admin-content {
+    .admin-workspace {
         margin-left: var(--ui-sidebar-width);
     }
     .admin-topbar {
@@ -510,11 +546,23 @@ textarea.form-control {
         padding: 14px 16px;
     }
     .topbar-location {
-        gap: 10px;
+        gap: 8px;
         padding-top: 4px;
     }
     .topbar-brand {
         font-size: 24px;
+        gap: 6px;
+    }
+    .api-docs-label--full, .api-docs-external {
+        display: none;
+    }
+    .api-docs-label--short {
+        display: inline;
+    }
+    .topbar-actions .api-docs-button {
+        gap: 6px;
+        padding: 8px 10px;
+        font-size: 13px;
     }
     .topbar-actions {
         flex-wrap: wrap;

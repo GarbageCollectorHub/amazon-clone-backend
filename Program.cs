@@ -262,7 +262,7 @@ if (app.Environment.IsDevelopment())
 }
 
 // Swagger
-if (app.Environment.IsDevelopment())
+if (app.Configuration.GetValue<bool>("Swagger:Enabled"))
 {
     app.UseSwagger();
     app.UseSwaggerUI(c =>

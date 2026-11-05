@@ -1,4 +1,5 @@
 @using System.Security.Claims
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
 @{
     bool isAuthorized = Context.User.Identity?.IsAuthenticated == true;
     string? userName = User.FindFirstValue(ClaimTypes.Email);
@@ -14,7 +15,7 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>@ViewData["Title"] - AMZN</title>
+        <title>@ViewData["Title"] | AMZN Admin</title>
         <script>
             (function () {
                 try {
@@ -38,7 +39,9 @@
         <aside class="admin-sidebar offcanvas-lg offcanvas-start" id="adminSidebar" tabindex="-1" aria-label="Management navigation">
             <div class="sidebar-inner">
                 <div class="sidebar-brand">
-                    <a class="brand" asp-controller="Home" asp-action="Index" aria-label="AMZN home">AMZN<span class="brand-mark" aria-hidden="true"></span>
+                    <a class="brand brand--admin" asp-controller="Home" asp-action="Index" aria-label="AMZN admin home">
+                        <span class="brand-wordmark">AMZN<span class="brand-mark" aria-hidden="true"></span></span>
+                        <span class="brand-caption">ADMIN PANEL</span>
                     </a>
                     <button class="sidebar-close" type="button" data-bs-dismiss="offcanvas" data-bs-target="#adminSidebar" aria-label="Close navigation">
                         <svg class="icon" aria-hidden="true"><use href="#i-close" /></svg>
@@ -81,7 +84,10 @@
                 <button class="menu-button" type="button" data-bs-toggle="offcanvas" data-bs-target="#adminSidebar" aria-controls="adminSidebar" aria-label="Open navigation">
                     <svg class="icon" aria-hidden="true"><use href="#i-menu" /></svg>
                 </button>
-                <a class="brand topbar-brand" asp-controller="Home" asp-action="Index" aria-label="AMZN home">AMZN<span class="brand-mark" aria-hidden="true"></span></a>
+                <a class="brand brand--admin topbar-brand" asp-controller="Home" asp-action="Index" aria-label="AMZN admin home">
+                    <span class="brand-wordmark">AMZN<span class="brand-mark" aria-hidden="true"></span></span>
+                    <span class="brand-caption">ADMIN PANEL</span>
+                </a>
                 <nav class="page-breadcrumb" aria-label="Breadcrumb">
                     <a href="@(parentUrl ?? Url.Action("Index", "Home"))">@(parentTitle ?? "Catalog")</a>
                     <span aria-hidden="true">/</span>
@@ -89,12 +95,15 @@
                 </nav>
             </div>
             <nav class="topbar-actions" aria-label="Account and display settings">
-                <environment include="Development">
-                    <a class="topbar-button" href="/swagger" target="_blank" rel="noopener" title="Swagger (opens a new tab)" aria-label="Swagger (opens a new tab)">
+                @if (Configuration.GetValue<bool>("Swagger:Enabled"))
+                {
+                    <a class="topbar-button api-docs-button" href="@Url.Content("~/swagger")" target="_blank" rel="noopener" title="Open Swagger API documentation" aria-label="API documentation (opens a new tab)">
                         <svg class="icon icon--small" aria-hidden="true"><use href="#i-code" /></svg>
-                        <span class="topbar-label">Swagger</span>
+                        <span class="api-docs-label--full">API documentation</span>
+                        <span class="api-docs-label--short">API docs</span>
+                        <svg class="icon icon--small api-docs-external" aria-hidden="true"><use href="#i-external" /></svg>
                     </a>
-                </environment>
+                }
                 <button type="button" id="theme-toggle" class="topbar-button" title="Dark theme" aria-label="Dark theme" aria-pressed="false">
                     <svg class="icon icon--small theme-icon-dark" aria-hidden="true"><use href="#i-moon" /></svg>
                     <svg class="icon icon--small theme-icon-light" aria-hidden="true"><use href="#i-sun" /></svg>
@@ -118,9 +127,11 @@
                 </div>
             </nav>
         </header>
-        <main class="admin-content" id="main-content" tabindex="-1">
-            @RenderBody()
-        </main>
+        <div class="admin-workspace">
+            <main class="admin-content" id="main-content" tabindex="-1">
+                @RenderBody()
+            </main>
+        </div>
         <div class="modal fade" id="authModal" tabindex="-1" aria-labelledby="authModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
