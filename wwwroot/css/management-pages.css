@@ -505,6 +505,27 @@ body.theme-scope.modal-open, .theme-scope .modal {
     font-size: 14px;
     color: var(--ui-danger);
 }
+.auth-progress {
+    font-size: 14px;
+    color: var(--ui-muted);
+}
+.auth-submit {
+    min-width: 168px;
+}
+.auth-submit.is-loading {
+    cursor: wait;
+}
+.auth-submit__spinner {
+    display: none;
+}
+.auth-submit.is-loading .auth-submit__spinner {
+    display: inline-block;
+}
+@media (prefers-reduced-motion: reduce) {
+    .auth-submit__spinner {
+        animation: none;
+    }
+}
 @media (min-width: 992px) {
     .admin-sidebar {
         position: fixed !important;

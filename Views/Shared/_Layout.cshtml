@@ -152,11 +152,15 @@
                                 <input id="auth-password" name="Password" type="password" class="form-control" autocomplete="current-password" required />
                             </div>
                         </form>
+                        <p id="auth-progress" class="auth-progress mt-3 mb-0" role="status" hidden>This is taking a little longer. Please wait.</p>
                         <div id="message" class="auth-feedback mt-3" role="alert"></div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="action-button action-button--secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" form="auth-modal-form" class="action-button action-button--primary">Sign in</button>
+                        <button type="submit" form="auth-modal-form" class="action-button action-button--primary auth-submit">
+                            <span class="spinner-border spinner-border-sm auth-submit__spinner" aria-hidden="true"></span>
+                            <span class="auth-submit__label">Sign in</span>
+                        </button>
                     </div>
                 </div>
             </div>

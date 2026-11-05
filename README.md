@@ -33,11 +33,15 @@ My main areas of responsibility were the backend API, data access and MVC produc
 
 The React storefront was built by the frontend team and has its own repository. These screenshots show it running locally with the deployed AMZN API and demo data from Azure SQL Database.
 
-**Homepage** with category sections and product collections.
+**Homepage overview** with three main categories, four product groups, popular items and the under-$20 collection.
 
+<p align="center">
 <a href="docs/images/storefront-home.png">
-  <img src="docs/images/storefront-home.png" alt="React storefront homepage with category cards and product sections from the AMZN API" width="900">
+  <img src="docs/images/storefront-home.png" alt="Complete React homepage overview with three main categories, four groups of four products, popular collections and products under $20" width="700">
 </a>
+</p>
+
+**[Open the full-size homepage overview](docs/images/storefront-home.png)**
 
 Click any preview to open the full-size screenshot.
 
@@ -54,7 +58,7 @@ Click any preview to open the full-size screenshot.
     </td>
     <td valign="top">
       <a href="docs/images/storefront-search.png"><img src="docs/images/storefront-search.png" alt="Storefront search suggestions with matching products" width="420"></a><br>
-      Product suggestions as the user types.<br>
+      Product suggestions with prices, brands and categories.<br>
       <a href="docs/images/storefront-search.png">Open full-size screenshot</a>
     </td>
   </tr>
