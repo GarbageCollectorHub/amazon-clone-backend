@@ -6,6 +6,14 @@ An Amazon-inspired e-commerce backend built with ASP.NET Core, Entity Framework 
 
 The project was built by a team of three frontend and two backend developers using a shared Figma design. This repository contains the backend and MVC management interface. The React storefront is in a separate repository.
 
+## Live demo
+
+**[Explore the API in Swagger](https://amzn-backend.azurewebsites.net/swagger)** · **[Open the admin panel](https://amzn-backend.azurewebsites.net/)**
+
+The backend is hosted on Azure App Service with Azure SQL Database and Azure Blob Storage. The live demo includes the REST API and MVC admin panel. The React storefront is not hosted at this address.
+
+The first request may take longer after a period of inactivity. Use test data when trying the demo.
+
 ## My contribution
 
 My main areas of responsibility were the backend API, data access and MVC product management.
@@ -21,45 +29,78 @@ My main areas of responsibility were the backend API, data access and MVC produc
 
 ## Project preview
 
-Catalog browsing with category, brand, rating and price filters, plus sorting options.
+### React storefront (client application)
 
-<a href="docs/images/storefront-catalog.png">
-  <img src="docs/images/storefront-catalog.png" alt="React storefront catalog with product filters and sorting" width="900">
+The React storefront was built by the frontend team and has its own repository. These screenshots show it running locally with the deployed AMZN API and demo data from Azure SQL Database.
+
+**Homepage** with category sections and product collections.
+
+<a href="docs/images/storefront-home.png">
+  <img src="docs/images/storefront-home.png" alt="React storefront homepage with category cards and product sections from the AMZN API" width="900">
 </a>
 
-The screenshots show the React storefront built by the frontend team. Its source code is in a separate repository.
-
-Click any preview below to open the full-size screenshot.
+Click any preview to open the full-size screenshot.
 
 <table>
   <tr>
+    <th width="50%">Catalog and filters</th>
     <th width="50%">Storefront search</th>
-    <th width="50%">Management dashboard</th>
   </tr>
   <tr>
+    <td valign="top">
+      <a href="docs/images/storefront-catalog.png"><img src="docs/images/storefront-catalog.png" alt="React catalog with category, brand, rating and price filters" width="420"></a><br>
+      Browse products with filters and sorting.<br>
+      <a href="docs/images/storefront-catalog.png">Open full-size screenshot</a>
+    </td>
     <td valign="top">
       <a href="docs/images/storefront-search.png"><img src="docs/images/storefront-search.png" alt="Storefront search suggestions with matching products" width="420"></a><br>
       Product suggestions as the user types.<br>
       <a href="docs/images/storefront-search.png">Open full-size screenshot</a>
     </td>
+  </tr>
+  <tr>
+    <th width="50%">Product page</th>
+    <th width="50%">Homepage collections</th>
+  </tr>
+  <tr>
     <td valign="top">
-      <a href="docs/images/admin-dashboard-dark.png"><img src="docs/images/admin-dashboard-dark.png" alt="MVC management dashboard in dark mode" width="420"></a><br>
-      Product and catalog management, with light and dark themes.<br>
-      <a href="docs/images/admin-dashboard-dark.png">Open full-size screenshot</a>
+      <a href="docs/images/storefront-product.png"><img src="docs/images/storefront-product.png" alt="Xiaomi Pad 6 product page with image gallery, rating, price and stock status" width="420"></a><br>
+      Product images, ratings, pricing and stock.<br>
+      <a href="docs/images/storefront-product.png">Open full-size screenshot</a>
+    </td>
+    <td valign="top">
+      <a href="docs/images/storefront-collections.png"><img src="docs/images/storefront-collections.png" alt="Homepage product collections and popular categories loaded from the backend" width="420"></a><br>
+      Popular products, categories and price-based collections.<br>
+      <a href="docs/images/storefront-collections.png">Open full-size screenshot</a>
     </td>
   </tr>
+</table>
+
+**[View customer reviews](docs/images/storefront-reviews.png)** with author names, ratings and dates from the API. The catalog and reviews shown here use demo data.
+
+### MVC admin panel (this repository)
+
+The management interface is part of the ASP.NET Core backend. It uses Razor views for catalog management and supports light and dark themes.
+
+<table>
   <tr>
-    <th width="50%">Product listings</th>
-    <th width="50%">Product editor</th>
+    <th width="33%">Management dashboard</th>
+    <th width="33%">Product listings</th>
+    <th width="33%">Product editor</th>
   </tr>
   <tr>
     <td valign="top">
-      <a href="docs/images/admin-products.png"><img src="docs/images/admin-products.png" alt="MVC product listings with search, sorting, prices and stock levels in light mode" width="420"></a><br>
+      <a href="docs/images/admin-dashboard-dark.png"><img src="docs/images/admin-dashboard-dark.png" alt="MVC management dashboard in dark mode" width="280"></a><br>
+      Catalog tools and management pages.<br>
+      <a href="docs/images/admin-dashboard-dark.png">Open full-size screenshot</a>
+    </td>
+    <td valign="top">
+      <a href="docs/images/admin-products.png"><img src="docs/images/admin-products.png" alt="MVC product listings with search, sorting, prices and stock levels in light mode" width="280"></a><br>
       Search and sort the seller's catalog.<br>
       <a href="docs/images/admin-products.png">Open full-size screenshot</a>
     </td>
     <td valign="top">
-      <a href="docs/images/admin-product-edit.png"><img src="docs/images/admin-product-edit.png" alt="MVC product editor in dark mode with pricing, stock and a gallery of distinct product images" width="420"></a><br>
+      <a href="docs/images/admin-product-edit.png"><img src="docs/images/admin-product-edit.png" alt="MVC product editor in dark mode with pricing, stock and a gallery of distinct product images" width="280"></a><br>
       Edit product details, pricing and image galleries.<br>
       <a href="docs/images/admin-product-edit.png">Open full-size screenshot</a>
     </td>
@@ -102,9 +143,10 @@ See form errors, image previews and mobile layouts. Click a preview to open that
 
 - C# / .NET 9
 - ASP.NET Core Web API and MVC with Razor views
-- Entity Framework Core 9 and SQL Server
+- Entity Framework Core 9 and SQL Server / Azure SQL Database
 - JWT Bearer authentication and BCrypt password hashing
 - Azure Blob Storage
+- Azure App Service
 - Swagger / OpenAPI
 
 ## Features
@@ -177,7 +219,7 @@ A background service checks promotion dates once when the application starts. Se
 
 ## API explorer
 
-Swagger UI documents the API and supports authenticated requests through its **Authorize** dialog.
+**[Open live Swagger UI](https://amzn-backend.azurewebsites.net/swagger)** to explore the endpoints. It supports authenticated requests through its **Authorize** dialog.
 
 Click a preview or its **Open full size** link to read the endpoint list.
 

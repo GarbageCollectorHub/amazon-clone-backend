@@ -107,6 +107,7 @@ public class AdminController : Controller
         return RedirectToAction("Index", "Home");
     }
 
+    [HttpGet("/Admin/Categories")]
     [Authorize(Roles = "Admin")]
     public IActionResult Category([FromServices] AdminCategoryService adminCategoryService)
     {
