@@ -1,5 +1,4 @@
 ﻿using AMZN.Data.Entities;
-using AMZN.Models;
 using AMZN.Models.Promotions;
 using AMZN.Repositories.Promotions;
 using AMZN.Repositories.Categories;
@@ -10,62 +9,55 @@ namespace AMZN.Services.Admin;
 public class AdminPromotionService
 {
     private readonly IPromotionRepository _promotions;
-    private readonly FormsValidators _formsValidator;
     private readonly IProductRepository _products;
     private readonly ICategoryRepository _categories;
     public AdminPromotionService(IPromotionRepository promotions,
-        FormsValidators formsValidator,
         IProductRepository products,
         ICategoryRepository categories)
     {
         _promotions = promotions;
-        _formsValidator = formsValidator;
         _products = products;
         _categories = categories;
     }
 
-    public (bool, object) AddPromotion(PromotionFormModel formModel)
+    public async Task<Dictionary<string, string>> AddPromotionAsync(PromotionFormModel formModel)
     {
-        Dictionary<string, string> errors = _formsValidator.ValidatePromotion(formModel);
-        if (errors.Count == 0)
+        string name = formModel.Name.Trim();
+        string target = formModel.ProductTitle.Trim();
+        Dictionary<string, string> errors = new();
+        if (await _promotions.NameExistsAsync(name))
+            errors.Add(nameof(formModel.Name), "Name already taken");
+        if (formModel.ApplyTo == "product" && !await _products.TitleExistsAsync(target))
+            errors.Add(nameof(formModel.ProductTitle), "Product does not exist");
+        if (formModel.ApplyTo == "category" && !await _categories.NameExistsAsync(target))
+            errors.Add(nameof(formModel.ProductTitle), "Category does not exist");
+        if (errors.Count > 0)
+            return errors;
+
+        Promotion promotion = new()
         {
-            Guid id = Guid.NewGuid();
-            Promotion promotion = new()
-            {
-                Id = id,
-                Name = formModel.Name,
-                ProductTitle = formModel.ProductTitle,
-                DiscountPercent = formModel.DiscountPercent,
-                StartDate = formModel.StartDate,
-                EndDate = formModel.EndDate,
-                CreatedAt = DateTime.UtcNow,
-            };
-            if (formModel.Description != null)
-            {
-                promotion.Description = formModel.Description;
-            }
-            if (formModel.ApplyTo == "product")
-            {
-                _promotions.AddProductPromotion(promotion);
-                if (_promotions.IsValid(promotion))
-                {
-                    _promotions.ApplyProductPromotion(promotion);
-                }
-            }
-            if (formModel.ApplyTo == "category")
-            {
-                _promotions.AddCategoryPromotion(promotion);
-                if (_promotions.IsValid(promotion))
-                {
-                    _promotions.ApplyCategoryPromotion(promotion);
-                }
-            }
-            return (true, "Promotion added successfully");
+            Id = Guid.NewGuid(),
+            Name = name,
+            Description = formModel.Description?.Trim(),
+            ProductTitle = target,
+            DiscountPercent = formModel.DiscountPercent.GetValueOrDefault(),
+            StartDate = formModel.StartDate.GetValueOrDefault(),
+            EndDate = formModel.EndDate.GetValueOrDefault(),
+            CreatedAt = DateTime.UtcNow,
+        };
+        if (formModel.ApplyTo == "product")
+        {
+            _promotions.AddProductPromotion(promotion);
+            if (_promotions.IsValid(promotion))
+                _promotions.ApplyProductPromotion(promotion);
         }
         else
         {
-            return (false, errors.Values);
+            _promotions.AddCategoryPromotion(promotion);
+            if (_promotions.IsValid(promotion))
+                _promotions.ApplyCategoryPromotion(promotion);
         }
+        return errors;
     }
 
     public void CheckPromotionsValidity()

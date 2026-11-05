@@ -2,5 +2,5 @@
 
 public class UserSignUpViewModel
 {
-    public Data.Entities.User? User { get; set; }
+    public UserSignUpFormModel Form { get; set; } = new();
 }

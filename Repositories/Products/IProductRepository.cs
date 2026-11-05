@@ -20,6 +20,7 @@ namespace AMZN.Repositories.Products
         Task<Product?> GetDetailsByIdAsync(Guid id);
 
         Task<bool> ExistsAsync(Guid id);
+        Task<bool> TitleExistsAsync(string title);
 
         // MyProduct View
         Task<List<Product>> GetSellerProductsAsync(Guid sellerId);

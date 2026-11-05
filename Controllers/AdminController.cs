@@ -35,24 +35,24 @@ public class AdminController : Controller
 
     public IActionResult SignUp()
     {
-        UserSignUpViewModel viewModel = new()
-        {
-            User = new()
-        };
-
-        return View(viewModel);
+        return View(new UserSignUpViewModel());
     }
 
     [HttpPost]
-    public async Task<JsonResult> Register(UserSignUpFormModel? model)
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Register([Bind(Prefix = "Form")] UserSignUpFormModel form)
     {
-        if (model == null)
+        if (ModelState.IsValid)
         {
-            return Json(new { success = false, message = "Form model is null" });
+            AddFormErrors(await _adminUserService.RegisterUser(form));
+            if (ModelState.IsValid)
+            {
+                TempData["Success"] = "Account created successfully!";
+                return RedirectToAction(nameof(SignUp));
+            }
         }
 
-        (bool success, object message) = await _adminUserService.RegisterUser(model);
-        return Json(new { success, message });
+        return View("SignUp", new UserSignUpViewModel { Form = form });
     }
 
     [HttpPost]
@@ -109,11 +109,11 @@ public class AdminController : Controller
 
     [HttpGet("/Admin/Categories")]
     [Authorize(Roles = "Admin")]
-    public IActionResult Category([FromServices] AdminCategoryService adminCategoryService)
+    public async Task<IActionResult> Category([FromServices] AdminCategoryService adminCategoryService)
     {
         CategoryViewModel viewModel = new()
         {
-            Categories = adminCategoryService.GetAll()
+            Categories = await adminCategoryService.GetAllAsync()
         };
         return View(viewModel);
     }
@@ -121,24 +121,32 @@ public class AdminController : Controller
     [HttpPost]
     [Authorize(Roles = "Admin")]
     [ValidateAntiForgeryToken]
-    public async Task<JsonResult> AddCategory(
-        CategoryFormModel? model,
+    public async Task<IActionResult> AddCategory(
+        [Bind(Prefix = "Form")] CategoryFormModel form,
         [FromServices] AdminCategoryService adminCategoryService)
     {
-        if (model == null)
+        if (ModelState.IsValid)
         {
-            return Json(new { success = false, message = "Form model is null" });
+            try
+            {
+                AddFormErrors(await adminCategoryService.AddCategoryAsync(form));
+                if (ModelState.IsValid)
+                {
+                    TempData["Success"] = "Category added successfully!";
+                    return RedirectToAction(nameof(Category));
+                }
+            }
+            catch (InvalidOperationException exception)
+            {
+                ModelState.AddModelError("Form.Image", exception.Message);
+            }
         }
 
-        try
+        return View("Category", new CategoryViewModel
         {
-            (bool success, object message) = await adminCategoryService.AddCategoryAsync(model);
-            return Json(new { success, message });
-        }
-        catch (InvalidOperationException exception)
-        {
-            return Json(new { success = false, message = exception.Message });
-        }
+            Form = form,
+            Categories = await adminCategoryService.GetAllAsync()
+        });
     }
 
     [Authorize(Roles = "Admin")]
@@ -151,15 +159,25 @@ public class AdminController : Controller
     [HttpPost]
     [Authorize(Roles = "Admin")]
     [ValidateAntiForgeryToken]
-    public JsonResult AddPromotion(PromotionFormModel? model)
+    public async Task<IActionResult> AddPromotion([Bind(Prefix = "Form")] PromotionFormModel form)
     {
-        if (model == null)
+        if (ModelState.IsValid)
         {
-            return Json(new { success = false, message = "Form model is null" });
+            AddFormErrors(await _adminPromotionService.AddPromotionAsync(form));
+            if (ModelState.IsValid)
+            {
+                TempData["Success"] = "Promotion added successfully!";
+                return RedirectToAction(nameof(Promotions));
+            }
         }
 
-        (bool success, object message) = _adminPromotionService.AddPromotion(model);
-        return Json(new { success, message });
+        return View("Promotions", new PromotionViewModel { Form = form });
+    }
+
+    private void AddFormErrors(Dictionary<string, string> errors)
+    {
+        foreach (var error in errors)
+            ModelState.AddModelError($"Form.{error.Key}", error.Value);
     }
 
     private void SetAuthCookies(AuthResponseDto response)

@@ -6,7 +6,8 @@ namespace AMZN.Repositories.Categories;
 public interface ICategoryRepository
 {
     Category? GetById(string id);
-    void AddCategory(Category category);
+    Task AddCategoryAsync(Category category);
+    Task<bool> NameExistsAsync(string name);
 
     List<Category> GetAll();
 

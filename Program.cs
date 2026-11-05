@@ -124,7 +124,6 @@ builder.Services.AddCors(options =>
 
 
 // DI services
-builder.Services.AddScoped<FormsValidators>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();

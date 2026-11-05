@@ -19,10 +19,15 @@ public class CategoryRepository : ICategoryRepository
         return _dataContext.Categories.FirstOrDefault(x => x.Id.ToString() == id);
     }
     
-    public void AddCategory(Category category)
+    public async Task AddCategoryAsync(Category category)
     {
         _dataContext.Categories.Add(category);
-        _dataContext.SaveChanges();
+        await _dataContext.SaveChangesAsync();
+    }
+
+    public Task<bool> NameExistsAsync(string name)
+    {
+        return _dataContext.Categories.AnyAsync(c => c.Name == name);
     }
     
     public List<Category> GetAll()

@@ -36,31 +36,30 @@
     }
     else
     {
-        <div id="category-feedback"></div>
+        <div asp-validation-summary="ModelOnly" class="validation-summary" role="alert"></div>
 
-        <form id="add-category-form" enctype="multipart/form-data">
-            @Html.AntiForgeryToken()
+        <form asp-action="AddCategory" method="post" enctype="multipart/form-data">
 
             <section class="panel panel--full">
 
                 <div class="form-grid form-grid--2">
 
                     <div class="field-group">
-                        <label class="form-label" for="category-name">Name</label>
-                        <input id="category-name"
-                               name="category-name"
-                               class="form-control" />
+                        <label asp-for="Form.Name" class="form-label">Name</label>
+                        <input asp-for="Form.Name" class="form-control" />
+                        <span asp-validation-for="Form.Name" class="text-danger"></span>
                     </div>
 
                     <div class="field-group">
-                        <label class="form-label" for="parent-category">Parent category</label>
-                        <select id="parent-category" name="parent-category" class="form-select">
+                        <label asp-for="Form.ParentCategory" class="form-label">Parent category</label>
+                        <select asp-for="Form.ParentCategory" class="form-select">
                             <option value="">None (root category)</option>
                             @foreach (var category in Model.Categories)
                             {
                                 <option value="@category.Id">@category.Name</option>
                             }
                         </select>
+                        <span asp-validation-for="Form.ParentCategory" class="text-danger"></span>
                     </div>
 
                 </div>
@@ -68,19 +67,18 @@
                 <div class="form-grid" style="margin-top: 16px;">
 
                     <div class="field-group">
-                        <label class="form-label" for="category-description">Description</label>
-                        <textarea id="category-description"
-                              name="category-description"
-                              class="form-control"></textarea>
+                        <label asp-for="Form.Description" class="form-label">Description</label>
+                        <textarea asp-for="Form.Description" class="form-control"></textarea>
+                        <span asp-validation-for="Form.Description" class="text-danger"></span>
                     </div>
 
                     <div class="field-group">
-                        <label class="form-label" for="category-image">Cover image</label>
-                        <input id="category-image"
-                               name="category-image"
+                        <label asp-for="Form.Image" class="form-label">Cover image</label>
+                        <input asp-for="Form.Image"
                                type="file"
                                class="form-control"
                                accept=".jpg,.jpeg,.png,.webp" />
+                        <span asp-validation-for="Form.Image" class="text-danger"></span>
                     </div>
 
                 </div>
@@ -96,3 +94,7 @@
     }
 
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

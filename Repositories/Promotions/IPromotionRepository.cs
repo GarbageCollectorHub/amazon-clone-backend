@@ -4,6 +4,8 @@ namespace AMZN.Repositories.Promotions;
 
 public interface IPromotionRepository
 {
+    Task<bool> NameExistsAsync(string name);
+
     void AddProductPromotion(Promotion promotion);
 
     void AddCategoryPromotion(Promotion promotion);

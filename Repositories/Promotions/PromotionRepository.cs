@@ -1,5 +1,6 @@
 ﻿using AMZN.Data;
 using AMZN.Data.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace AMZN.Repositories.Promotions;
 
@@ -10,6 +11,11 @@ public class PromotionRepository : IPromotionRepository
     public PromotionRepository(DataContext dataContext)
     {
         _dataContext = dataContext;
+    }
+
+    public Task<bool> NameExistsAsync(string name)
+    {
+        return _dataContext.Promotions.AnyAsync(p => p.Name == name);
     }
     
     public void AddProductPromotion(Promotion promotion)

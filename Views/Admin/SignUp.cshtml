@@ -19,46 +19,52 @@
                 </div>
             </div>
 
-            <div id="signup-feedback"></div>
+            <div asp-validation-summary="ModelOnly" class="validation-summary" role="alert"></div>
 
-            <form id="user-registration-form">
+            <form asp-action="Register" method="post">
 
                 <section class="panel">
 
                     <div class="form-grid form-grid--2">
                         <div class="field-group">
-                            <label class="form-label" for="firstName">First name</label>
-                            <input id="firstName" name="firstName" type="text" class="form-control" />
+                            <label asp-for="Form.FirstName" class="form-label">First name</label>
+                            <input asp-for="Form.FirstName" class="form-control" />
+                            <span asp-validation-for="Form.FirstName" class="text-danger"></span>
                         </div>
                         <div class="field-group">
-                            <label class="form-label" for="lastName">Last name</label>
-                            <input id="lastName" name="lastName" type="text" class="form-control" />
+                            <label asp-for="Form.LastName" class="form-label">Last name</label>
+                            <input asp-for="Form.LastName" class="form-control" />
+                            <span asp-validation-for="Form.LastName" class="text-danger"></span>
                         </div>
                     </div>
 
                     <div class="form-grid form-grid--2 mt-3">
                         <div class="field-group">
-                            <label class="form-label" for="email">Email</label>
-                            <input id="email" name="email" type="email" class="form-control" />
+                            <label asp-for="Form.Email" class="form-label">Email</label>
+                            <input asp-for="Form.Email" type="email" class="form-control" />
+                            <span asp-validation-for="Form.Email" class="text-danger"></span>
                         </div>
                         <div class="field-group">
-                            <label class="form-label" for="role">Role</label>
-                            <select id="role" name="role" class="form-select">
+                            <label asp-for="Form.Role" class="form-label">Role</label>
+                            <select asp-for="Form.Role" class="form-select">
                                 <option value="User">User</option>
                                 <option value="Admin">Admin</option>
                                 <option value="Moderator">Moderator</option>
                             </select>
+                            <span asp-validation-for="Form.Role" class="text-danger"></span>
                         </div>
                     </div>
 
                     <div class="form-grid form-grid--2 mt-3">
                         <div class="field-group">
-                            <label class="form-label" for="password">Password</label>
-                            <input id="password" name="password" type="password" class="form-control" />
+                            <label asp-for="Form.Password" class="form-label">Password</label>
+                            <input asp-for="Form.Password" type="password" class="form-control" />
+                            <span asp-validation-for="Form.Password" class="text-danger"></span>
                         </div>
                         <div class="field-group">
-                            <label class="form-label" for="confirmPassword">Confirm password</label>
-                            <input id="confirmPassword" name="confirmPassword" type="password" class="form-control" />
+                            <label asp-for="Form.ConfirmPassword" class="form-label">Confirm password</label>
+                            <input asp-for="Form.ConfirmPassword" type="password" class="form-control" />
+                            <span asp-validation-for="Form.ConfirmPassword" class="text-danger"></span>
                         </div>
                     </div>
 
@@ -77,20 +83,6 @@
 
 </div>
 
-<!-- Toast (всегда в DOM, показываем через JS) -->
-<div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3 success-toast-container"
-     id="signup-toast-container">
-    <div class="toast align-items-center border-0"
-         id="signup-toast"
-         role="alert"
-         aria-live="assertive"
-         aria-atomic="true">
-        <div class="d-flex">
-            <div class="toast-body" id="signup-toast-body"></div>
-            <button type="button"
-                    class="btn-close me-2 m-auto"
-                    data-bs-dismiss="toast"
-                    aria-label="Close"></button>
-        </div>
-    </div>
-</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

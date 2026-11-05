@@ -2,6 +2,6 @@
 
 public class CategoryViewModel
 {
-    public CategoryFormModel? FormModel { get; set; }
-    public List<Data.Entities.Category> Categories { get; set; }
+    public CategoryFormModel Form { get; set; } = new();
+    public List<Data.Entities.Category> Categories { get; set; } = new();
 }

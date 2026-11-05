@@ -21,6 +21,11 @@ namespace AMZN.Repositories.Products
             _db.Products.Add(product);
         }
 
+        public Task<bool> TitleExistsAsync(string title)
+        {
+            return _db.Products.AnyAsync(p => p.Title == title);
+        }
+
         public void Update(Product product)
         {
             _db.Products.Update(product);

@@ -2,5 +2,5 @@
 
 public class PromotionViewModel
 {
-    public PromotionFormModel? FormModel { get; set; }
+    public PromotionFormModel Form { get; set; } = new();
 }

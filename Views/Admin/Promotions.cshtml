@@ -36,58 +36,64 @@
     }
     else
     {
-        <div id="promotion-feedback"></div>
+        <div asp-validation-summary="ModelOnly" class="validation-summary" role="alert"></div>
 
-        <form id="add-promotion-form">
-            @Html.AntiForgeryToken()
+        <form asp-action="AddPromotion" method="post">
 
             <section class="panel panel--full">
 
                 <div class="form-grid form-grid--2">
                     <div class="field-group">
-                        <label class="form-label" for="promotion-name">Name</label>
-                        <input id="promotion-name" name="promotion-name" class="form-control" />
+                        <label asp-for="Form.Name" class="form-label">Name</label>
+                        <input asp-for="Form.Name" class="form-control" />
+                        <span asp-validation-for="Form.Name" class="text-danger"></span>
                     </div>
                     <div class="field-group">
-                        <label class="form-label" for="apply-to">Apply to</label>
-                        <select id="apply-to" name="apply-to" class="form-select">
+                        <label asp-for="Form.ApplyTo" class="form-label">Apply to</label>
+                        <select asp-for="Form.ApplyTo" class="form-select">
                             <option value="product">Single product</option>
                             <option value="category">Whole category</option>
                         </select>
+                        <span asp-validation-for="Form.ApplyTo" class="text-danger"></span>
                     </div>
                 </div>
 
                 <div class="form-grid form-grid--2 mt-3">
                     <div class="field-group">
-                        <label class="form-label" for="product-title">Product / Category name</label>
-                        <input id="product-title" name="product-title" class="form-control" />
+                        <label asp-for="Form.ProductTitle" class="form-label">Product / Category name</label>
+                        <input asp-for="Form.ProductTitle" class="form-control" />
+                        <span asp-validation-for="Form.ProductTitle" class="text-danger"></span>
                     </div>
                     <div class="field-group">
-                        <label class="form-label" for="promotion-discount-percent">Discount (%)</label>
-                        <input id="promotion-discount-percent" name="promotion-discount-percent"
+                        <label asp-for="Form.DiscountPercent" class="form-label">Discount (%)</label>
+                        <input asp-for="Form.DiscountPercent"
                                type="number" min="1" max="99"
                                class="form-control" />
+                        <span asp-validation-for="Form.DiscountPercent" class="text-danger"></span>
                     </div>
                 </div>
 
                 <div class="form-grid form-grid--2 mt-3">
                     <div class="field-group">
-                        <label class="form-label" for="promotion-start-date">Start date</label>
-                        <input id="promotion-start-date" name="promotion-start-date"
+                        <label asp-for="Form.StartDate" class="form-label">Start date</label>
+                        <input asp-for="Form.StartDate"
                                type="date" class="form-control" />
+                        <span asp-validation-for="Form.StartDate" class="text-danger"></span>
                     </div>
                     <div class="field-group">
-                        <label class="form-label" for="promotion-end-date">End date</label>
-                        <input id="promotion-end-date" name="promotion-end-date"
+                        <label asp-for="Form.EndDate" class="form-label">End date</label>
+                        <input asp-for="Form.EndDate"
                                type="date" class="form-control" />
+                        <span asp-validation-for="Form.EndDate" class="text-danger"></span>
                     </div>
                 </div>
 
                 <div class="form-grid mt-3">
                     <div class="field-group">
-                        <label class="form-label" for="promotion-description">Description</label>
-                        <textarea id="promotion-description" name="promotion-description"
+                        <label asp-for="Form.Description" class="form-label">Description</label>
+                        <textarea asp-for="Form.Description"
                               class="form-control"></textarea>
+                        <span asp-validation-for="Form.Description" class="text-danger"></span>
                     </div>
                 </div>
 
@@ -103,3 +109,7 @@
     }
 
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
