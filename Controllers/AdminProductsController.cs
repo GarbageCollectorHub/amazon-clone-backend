@@ -3,6 +3,7 @@ using AMZN.Models.Product;
 using AMZN.Services.Admin;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace AMZN.Controllers
 {
@@ -44,6 +45,9 @@ namespace AMZN.Controllers
         [HttpPost("Create")]
         [Authorize]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting(RateLimitingExtensions.ImageUploadsPolicy)]
+        [RequestSizeLimit(25 * 1024 * 1024)]
+        [RequestFormLimits(MultipartBodyLengthLimit = 25 * 1024 * 1024)]
         public async Task<IActionResult> Create(ProductCreateFormModel form, CancellationToken cancellationToken)
         {
             Guid? sellerId = User.GetUserIdOrNull();
@@ -98,6 +102,9 @@ namespace AMZN.Controllers
         [HttpPost("Edit/{id:guid}")]
         [Authorize]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting(RateLimitingExtensions.ImageUploadsPolicy)]
+        [RequestSizeLimit(25 * 1024 * 1024)]
+        [RequestFormLimits(MultipartBodyLengthLimit = 25 * 1024 * 1024)]
         public async Task<IActionResult> Edit(Guid id, ProductEditFormModel form, CancellationToken cancellationToken)
         {
             Guid? sellerId = User.GetUserIdOrNull();

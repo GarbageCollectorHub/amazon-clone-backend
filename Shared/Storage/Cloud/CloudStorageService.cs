@@ -1,6 +1,7 @@
 ﻿namespace AMZN.Services.Storage.Cloud;
 
 using Azure;
+using AMZN.Shared.Validation.Files;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Microsoft.Extensions.Configuration;
@@ -9,8 +10,11 @@ using Microsoft.Extensions.Configuration;
 public class CloudStorageService : ICloudStorageService
 {
     private const string ContainerName = "amzn-storage";
+    private const long MaxImageBytes = 5 * 1024 * 1024;
     private readonly BlobContainerClient? _containerClient;
     private readonly ILogger<CloudStorageService> _logger;
+    private readonly IConfiguration _configuration;
+    private readonly SemaphoreSlim _uploadSlots = new(2);
 
     private BlobContainerClient ContainerClient => _containerClient
         ?? throw new InvalidOperationException("Image storage is not configured. Image uploads are unavailable.");
@@ -18,6 +22,7 @@ public class CloudStorageService : ICloudStorageService
     public CloudStorageService(IConfiguration configuration, ILogger<CloudStorageService> logger)
     {
         _logger = logger;
+        _configuration = configuration;
         var connectionString = configuration.GetConnectionString("AzureStorage");
 
         if (string.IsNullOrWhiteSpace(connectionString))
@@ -36,31 +41,24 @@ public class CloudStorageService : ICloudStorageService
     public async Task<string> SaveImageAsync(IFormFile file, CancellationToken cancellationToken = default)
     {
         if (file == null) throw new ArgumentNullException(nameof(file));
-        if (file.Length <= 0) throw new InvalidOperationException("File is empty");
+        if (!_configuration.GetValue("ImageUploads:Enabled", true))
+            throw new InvalidOperationException("Image uploads are currently disabled. Please try again later.");
+
+        if (!ImageFileRules.TryValidate(file, MaxImageBytes, out var error))
+            throw new InvalidOperationException(error);
 
         var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
         var blobName = $"{Guid.NewGuid():N}{ext}";
 
         BlobClient blob = ContainerClient.GetBlobClient(blobName);
 
-        var contentType = file.ContentType;
-
-        // Если клиент не прислал ContentType то определяем по расширению (для корректного отображения в браузере)
-        if (string.IsNullOrWhiteSpace(contentType))
-        {
-            contentType = ext switch
-            {
-                ".jpg" or ".jpeg" => "image/jpeg",
-                ".png" => "image/png",
-                ".webp" => "image/webp",
-                _ => "image/jpeg"
-            };
-        }
-
         var options = new BlobUploadOptions
         {
-            HttpHeaders = new BlobHttpHeaders { ContentType = contentType }
+            HttpHeaders = new BlobHttpHeaders { ContentType = file.ContentType }
         };
+
+        if (!await _uploadSlots.WaitAsync(0, cancellationToken))
+            throw new InvalidOperationException("Image storage is busy. Please try again in a moment.");
 
         try
         {
@@ -75,6 +73,10 @@ public class CloudStorageService : ICloudStorageService
         {
             _logger.LogWarning(exception, "Failed to upload an image to Azure Blob Storage");
             throw new InvalidOperationException("Image storage is unavailable. Please try again later.", exception);
+        }
+        finally
+        {
+            _uploadSlots.Release();
         }
     }
 

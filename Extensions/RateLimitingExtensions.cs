@@ -1,5 +1,11 @@
 ﻿using AMZN.DTOs.Common;
 using AMZN.Shared.Exceptions.Errors;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Abstractions;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Security.Claims;
 using System.Globalization;
 using System.Text.Json;
 using System.Threading.RateLimiting;
@@ -8,6 +14,8 @@ namespace AMZN.Extensions
 {
     public static class RateLimitingExtensions
     {
+        public const string ImageUploadsPolicy = "ImageUploads";
+
         public static IServiceCollection AddAmznRateLimiting(this IServiceCollection services)
         {
             services.AddRateLimiter(options =>
@@ -26,6 +34,19 @@ namespace AMZN.Extensions
                     }
 
                     http.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+                    if (http.GetEndpoint()?.Metadata.GetMetadata<EnableRateLimitingAttribute>()?.PolicyName == ImageUploadsPolicy)
+                    {
+                        var result = new ViewResult
+                        {
+                            ViewName = "~/Views/Shared/UploadLimit.cshtml",
+                            StatusCode = StatusCodes.Status429TooManyRequests,
+                            ViewData = new ViewDataDictionary(
+                                http.RequestServices.GetRequiredService<IModelMetadataProvider>(), new ModelStateDictionary())
+                        };
+                        await result.ExecuteResultAsync(new ActionContext(http, http.GetRouteData(), new ActionDescriptor()));
+                        return;
+                    }
+
                     http.Response.ContentType = "application/json; charset=utf-8";
 
                     var payload = new ApiErrorResponse
@@ -38,6 +59,18 @@ namespace AMZN.Extensions
 
                     await http.Response.WriteAsync(JsonSerializer.Serialize(payload, JsonSerializerOptions.Web), cancellationToken);
                 };
+
+                options.AddPolicy(ImageUploadsPolicy, context =>
+                {
+                    var userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
+                    var key = userId != null ? $"user:{userId}" : $"ip:{context.Connection.RemoteIpAddress}";
+                    return RateLimitPartition.GetFixedWindowLimiter(key, _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 3,
+                        Window = TimeSpan.FromMinutes(1),
+                        QueueLimit = 0
+                    });
+                });
 
                 options.AddPolicy("Auth", context =>
                 {

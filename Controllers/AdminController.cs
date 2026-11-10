@@ -1,4 +1,5 @@
 using AMZN.DTOs.Auth;
+using AMZN.Extensions;
 using AMZN.Models.Promotions;
 using AMZN.Models.Category;
 using AMZN.Models.User;
@@ -121,6 +122,9 @@ public class AdminController : Controller
     [HttpPost]
     [Authorize(Roles = "Admin")]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting(RateLimitingExtensions.ImageUploadsPolicy)]
+    [RequestSizeLimit(25 * 1024 * 1024)]
+    [RequestFormLimits(MultipartBodyLengthLimit = 25 * 1024 * 1024)]
     public async Task<IActionResult> AddCategory(
         [Bind(Prefix = "Form")] CategoryFormModel form,
         [FromServices] AdminCategoryService adminCategoryService)
