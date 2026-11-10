@@ -15,6 +15,9 @@ namespace AMZN.Extensions
     public static class RateLimitingExtensions
     {
         public const string ImageUploadsPolicy = "ImageUploads";
+        public const string LoginPolicy = "Login";
+        public const string RegistrationPolicy = "Registration";
+        public const string RefreshPolicy = "Refresh";
 
         public static IServiceCollection AddAmznRateLimiting(this IServiceCollection services)
         {
@@ -22,7 +25,7 @@ namespace AMZN.Extensions
             {
                 options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 
-                // Наш ApiErrorResponse JSON response вместо "пустого 429"
+                // MVC forms receive HTML; API and AJAX requests receive JSON.
                 options.OnRejected = async (context, cancellationToken) =>
                 {
                     var http = context.HttpContext;
@@ -34,15 +37,21 @@ namespace AMZN.Extensions
                     }
 
                     http.Response.StatusCode = StatusCodes.Status429TooManyRequests;
-                    if (http.GetEndpoint()?.Metadata.GetMetadata<EnableRateLimitingAttribute>()?.PolicyName == ImageUploadsPolicy)
+                    string? policy = http.GetEndpoint()?.Metadata.GetMetadata<EnableRateLimitingAttribute>()?.PolicyName;
+                    bool isMvcRegistration = policy == RegistrationPolicy && !http.Request.Path.StartsWithSegments("/api");
+                    if (policy == ImageUploadsPolicy || isMvcRegistration)
                     {
                         var result = new ViewResult
                         {
-                            ViewName = "~/Views/Shared/UploadLimit.cshtml",
+                            ViewName = "~/Views/Shared/RateLimit.cshtml",
                             StatusCode = StatusCodes.Status429TooManyRequests,
                             ViewData = new ViewDataDictionary(
                                 http.RequestServices.GetRequiredService<IModelMetadataProvider>(), new ModelStateDictionary())
                         };
+                        result.ViewData["LimitMessage"] = isMvcRegistration
+                            ? "You have submitted too many registration requests."
+                            : "You have submitted several product or category changes too quickly.";
+                        result.ViewData["RetryAfterMinutes"] = Math.Max(1, (int)Math.Ceiling(retryAfter.TotalMinutes));
                         await result.ExecuteResultAsync(new ActionContext(http, http.GetRouteData(), new ActionDescriptor()));
                         return;
                     }
@@ -59,6 +68,10 @@ namespace AMZN.Extensions
 
                     await http.Response.WriteAsync(JsonSerializer.Serialize(payload, JsonSerializerOptions.Web), cancellationToken);
                 };
+
+                AddIpPolicy(options, LoginPolicy, 5, TimeSpan.FromMinutes(1));
+                AddIpPolicy(options, RegistrationPolicy, 3, TimeSpan.FromMinutes(10));
+                AddIpPolicy(options, RefreshPolicy, 30, TimeSpan.FromMinutes(1));
 
                 options.AddPolicy(ImageUploadsPolicy, context =>
                 {
@@ -94,6 +107,18 @@ namespace AMZN.Extensions
             return services;
         }
 
+
+        private static void AddIpPolicy(RateLimiterOptions options, string name, int limit, TimeSpan window)
+        {
+            options.AddPolicy(name, context => RateLimitPartition.GetFixedWindowLimiter(
+                context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = limit,
+                    Window = window,
+                    QueueLimit = 0
+                }));
+        }
 
         public static WebApplication UseAmznRateLimiting(this WebApplication app)
         {

@@ -1,5 +1,6 @@
 ﻿using AMZN.DTOs.Auth;
 using AMZN.Services.Auth;
+using AMZN.Extensions;
 using AMZN.Shared.Exceptions;
 using AMZN.Shared.Exceptions.Errors;
 using Microsoft.AspNetCore.Authorization;
@@ -24,7 +25,7 @@ namespace AMZN.Controllers.Api
         // POST api/auth/register
         [HttpPost("register")]
         [AllowAnonymous]
-        [EnableRateLimiting("Auth")]
+        [EnableRateLimiting(RateLimitingExtensions.RegistrationPolicy)]
         public async Task<ActionResult<AuthResponseDto>> Register([FromBody] RegisterRequestDto request)
         {
 
@@ -36,7 +37,7 @@ namespace AMZN.Controllers.Api
         // POST api/auth/login
         [HttpPost("login")]
         [AllowAnonymous]
-        [EnableRateLimiting("Auth")]
+        [EnableRateLimiting(RateLimitingExtensions.LoginPolicy)]
         public async Task<ActionResult<AuthResponseDto>> Login([FromBody]  LoginRequestDto request)
         {
 
@@ -48,7 +49,7 @@ namespace AMZN.Controllers.Api
         // POST api/auth/refresh
         [HttpPost("refresh")]
         [AllowAnonymous]
-        [EnableRateLimiting("Auth")]
+        [EnableRateLimiting(RateLimitingExtensions.RefreshPolicy)]
         public async Task<ActionResult<AuthResponseDto>> Refresh([FromBody] RefreshRequestDto request)
         {
 

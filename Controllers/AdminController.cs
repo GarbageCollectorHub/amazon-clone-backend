@@ -41,6 +41,7 @@ public class AdminController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting(RateLimitingExtensions.RegistrationPolicy)]
     public async Task<IActionResult> Register([Bind(Prefix = "Form")] UserSignUpFormModel form)
     {
         if (ModelState.IsValid)
@@ -59,7 +60,7 @@ public class AdminController : Controller
     [HttpPost]
     [AllowAnonymous]
     [ValidateAntiForgeryToken]
-    [EnableRateLimiting("Auth")]
+    [EnableRateLimiting(RateLimitingExtensions.LoginPolicy)]
     public async Task<JsonResult> Login([FromForm] LoginRequestDto? request)
     {
         if (request == null || !ModelState.IsValid)

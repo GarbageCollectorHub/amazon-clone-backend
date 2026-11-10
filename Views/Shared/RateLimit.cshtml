@@ -1,16 +1,17 @@
 @{
     ViewData["Title"] = "Please wait";
+    int minutes = ViewData["RetryAfterMinutes"] as int? ?? 1;
 }
 
 <div class="management-page">
     <div class="management-page__header">
         <div>
             <h1 class="management-page__title">Please wait a moment</h1>
-            <p class="management-page__subtitle">You have submitted several product or category changes too quickly.</p>
+            <p class="management-page__subtitle">@ViewData["LimitMessage"]</p>
         </div>
     </div>
     <div class="alert alert-warning" role="alert">
-        Please wait one minute before trying again. Your last request was not saved.
+        Please wait up to @minutes @(minutes == 1 ? "minute" : "minutes") before trying again. Your last request was not processed.
     </div>
     <p>Use your browser's Back button to return to the form.</p>
     <a asp-controller="Home" asp-action="Index" class="action-button action-button--primary">Back to dashboard</a>
