@@ -249,6 +249,16 @@ Click a preview or its **Open full size** link to read the endpoint list.
   </tr>
 </table>
 
+## Tests
+
+Run the unit tests from the project root:
+
+```powershell
+dotnet test AMZN.sln
+```
+
+The tests cover image file rules and upload checks. They do not need SQL Server, Azure or secret settings.
+
 ## Running locally
 
 ### Prerequisites
