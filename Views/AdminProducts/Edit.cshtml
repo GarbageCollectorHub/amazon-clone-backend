@@ -1,5 +1,6 @@
 @using AMZN.Models.Product
 @model ProductEditViewModel
+@using AMZN.Shared.Limits
 @{
     ViewData["Title"] = "Edit product";
     ViewData["ParentTitle"] = "My products";
@@ -76,7 +77,6 @@
                         ValidationMessageFieldName = "Form.NewGalleryImages",
                         ExistingIdsFieldPrefix = "Form.ExistingGalleryImageIdsInOrder",
                         ExistingImages = Model.ExistingGalleryImages,
-                        MaxGalleryImages = ProductEditFormModel.MaxGalleryImages,
                         AllowExistingReorder = true,
                         IsEditMode = true
                     })
@@ -90,7 +90,7 @@
                             <label asp-for="Form.CurrentPrice" class="form-label">Current price</label>
                             <div class="price-input">
                                 <span aria-hidden="true">$</span>
-                                <input asp-for="Form.CurrentPrice" class="form-control" type="number" min="0" step="0.01" />
+                                <input asp-for="Form.CurrentPrice" class="form-control" type="number" min="@ProductLimits.PriceMin" step="0.01" />
                             </div>
                             <span asp-validation-for="Form.CurrentPrice" class="text-danger"></span>
                         </div>
@@ -99,13 +99,13 @@
                             </label>
                             <div class="price-input">
                                 <span aria-hidden="true">$</span>
-                                <input asp-for="Form.OriginalPrice" class="form-control" type="number" min="0" step="0.01" />
+                                <input asp-for="Form.OriginalPrice" class="form-control" type="number" min="@ProductLimits.PriceMin" step="0.01" />
                             </div>
                             <span asp-validation-for="Form.OriginalPrice" class="text-danger"></span>
                         </div>
                         <div class="field-group">
                             <label asp-for="Form.StockQuantity" class="form-label">Stock quantity</label>
-                            <input asp-for="Form.StockQuantity" class="form-control" type="number" min="0" step="1" />
+                            <input asp-for="Form.StockQuantity" class="form-control" type="number" min="@ProductLimits.StockMin" step="1" />
                             <span asp-validation-for="Form.StockQuantity" class="text-danger"></span>
                         </div>
                     </div>
@@ -114,13 +114,13 @@
                     <h2 class="panel__title" id="primary-image-title">Primary image</h2>
                     <img src="@Model.CurrentPrimaryImageUrl" alt="Current primary image for @Model.Form.Title" class="primary-image-preview js-primary-image-preview" />
                     <div class="primary-image-picker">
-                        <input asp-for="Form.NewPrimaryImage" class="visually-hidden js-primary-image-input" type="file" accept=".jpg,.jpeg,.png,.webp" aria-describedby="primary-image-hint" />
+                        <input asp-for="Form.NewPrimaryImage" class="visually-hidden js-primary-image-input" type="file" accept=".jpg,.jpeg,.png,.webp" aria-describedby="primary-image-hint" data-max-file-bytes="@ImageUploadLimits.MaxFileBytes" />
                         <label asp-for="Form.NewPrimaryImage" class="action-button action-button--secondary">
                             <svg class="icon icon--small" aria-hidden="true"><use href="#i-upload" /></svg>
                             Replace image
                         </label>
                     </div>
-                    <p class="image-hint" id="primary-image-hint">JPG, PNG or WebP. Max 5 MB.</p>
+                    <p class="image-hint" id="primary-image-hint">JPG, PNG or WebP. Max @ImageUploadLimits.MaxFileMiB MiB.</p>
                     <span asp-validation-for="Form.NewPrimaryImage" class="text-danger"></span>
                     <span class="image-selection-name js-primary-image-name" role="status"></span>
                 </section>

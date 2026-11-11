@@ -2,13 +2,13 @@
 using AMZN.DTOs.Search;
 using AMZN.Repositories.Search;
 using AMZN.Shared.Helpers.Search;
+using AMZN.Shared.Limits;
 using AMZN.Shared.Mapping;
 
 namespace AMZN.Services.Search
 {
     public class SearchService
     {
-        private const int MinQueryLength = 2;
         private const int ProductSuggestionsTake = 6;
         private const int CategorySuggestionsTake = 4;
         private const int BrandSuggestionsTake = 4;
@@ -24,7 +24,7 @@ namespace AMZN.Services.Search
         {
             var normalizedQuery = SearchQueryHelper.NormalizeQuery(query);
 
-            if (normalizedQuery.Length < MinQueryLength)
+            if (normalizedQuery.Length < CatalogLimits.SearchMinLength)
                 return new SearchSuggestionsResponseDto();
 
             var products = await _searchRepository.GetProductSuggestionsAsync(normalizedQuery, ProductSuggestionsTake);

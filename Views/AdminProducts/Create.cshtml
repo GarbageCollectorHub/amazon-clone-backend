@@ -1,5 +1,6 @@
 @using AMZN.Models.Product
 @model ProductCreateViewModel
+@using AMZN.Shared.Limits
 @{
     ViewData["Title"] = "Create product";
     ViewData["ParentTitle"] = "My products";
@@ -75,7 +76,6 @@
                         NewFilesInputName = "Form.Images",
                         ValidationMessageFieldName = "Form.Images",
                         ExistingImages = new List<ExistingProductImageViewModel>(),
-                        MaxGalleryImages = ProductCreateFormModel.MaxGalleryImages,
                         AllowExistingReorder = false,
                         IsEditMode = false
                     })
@@ -104,7 +104,7 @@
                         </div>
                         <div class="field-group">
                             <label asp-for="Form.StockQuantity" class="form-label">Stock quantity</label>
-                            <input asp-for="Form.StockQuantity" class="form-control" type="number" min="0" step="1" />
+                            <input asp-for="Form.StockQuantity" class="form-control" type="number" min="@ProductLimits.StockMin" step="1" />
                             <span asp-validation-for="Form.StockQuantity" class="text-danger"></span>
                         </div>
                     </div>
@@ -113,13 +113,13 @@
                     <h2 class="panel__title" id="primary-image-title">Primary image</h2>
                     <img src="~/images/product-placeholder.svg" alt="Primary image preview" class="primary-image-preview js-primary-image-preview" />
                     <div class="primary-image-picker">
-                        <input asp-for="Form.PrimaryImage" class="visually-hidden js-primary-image-input" type="file" accept=".jpg,.jpeg,.png,.webp" aria-describedby="primary-image-hint" />
+                        <input asp-for="Form.PrimaryImage" class="visually-hidden js-primary-image-input" type="file" accept=".jpg,.jpeg,.png,.webp" aria-describedby="primary-image-hint" data-max-file-bytes="@ImageUploadLimits.MaxFileBytes" />
                         <label asp-for="Form.PrimaryImage" class="action-button action-button--secondary">
                             <svg class="icon icon--small" aria-hidden="true"><use href="#i-upload" /></svg>
                             Choose image
                         </label>
                     </div>
-                    <p class="image-hint" id="primary-image-hint">JPG, PNG or WebP. Max 5 MB.</p>
+                    <p class="image-hint" id="primary-image-hint">JPG, PNG or WebP. Max @ImageUploadLimits.MaxFileMiB MiB.</p>
                     <span asp-validation-for="Form.PrimaryImage" class="text-danger"></span>
                     <span class="image-selection-name js-primary-image-name" role="status"></span>
                 </section>

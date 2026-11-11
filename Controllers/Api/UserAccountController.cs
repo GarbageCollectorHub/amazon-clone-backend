@@ -27,7 +27,7 @@ public class UserAccountController : ControllerBase
     // POST api/user/update
     [HttpPost("update")]
     [Authorize]
-    [EnableRateLimiting("Auth")]
+    [EnableRateLimiting(RateLimitingExtensions.AccountApiPolicy)]
     public async Task<ActionResult<ProfileUpdateResponseDto>> Update([FromBody] ProfileUpdateRequestDto request)
     {
         var userId = User.GetRequiredUserId();
@@ -39,7 +39,7 @@ public class UserAccountController : ControllerBase
     
     [HttpPost("delete")]
     [Authorize]
-    [EnableRateLimiting("Auth")]
+    [EnableRateLimiting(RateLimitingExtensions.AccountApiPolicy)]
     public async Task<ActionResult> DeleteUser()
     {
         var userId = User.GetRequiredUserId();
@@ -50,7 +50,7 @@ public class UserAccountController : ControllerBase
     // POST api/user/addPaymentMethod
     [HttpPost("addPaymentMethod")]
     [Authorize]
-    [EnableRateLimiting("Auth")]
+    [EnableRateLimiting(RateLimitingExtensions.AccountApiPolicy)]
     public async Task<ActionResult<PaymentMethodResponseDto>> AddPaymentMethod(
         [FromBody] PaymentMethodRequestDto request)
     {
@@ -62,7 +62,7 @@ public class UserAccountController : ControllerBase
     // GET api/user/getPaymentMethods
     [HttpGet("getPaymentMethods")]
     [Authorize]
-    [EnableRateLimiting("Auth")]
+    [EnableRateLimiting(RateLimitingExtensions.AccountApiPolicy)]
     public async Task<ActionResult<List<PaymentMethodResponseDto>>> GetPaymentMethods()
     {
         var userId = User.GetRequiredUserId();
@@ -73,7 +73,7 @@ public class UserAccountController : ControllerBase
     // POST api/user/addDeliveryAddress
     [HttpPost("addDeliveryAddress")]
     [Authorize]
-    [EnableRateLimiting("Auth")]
+    [EnableRateLimiting(RateLimitingExtensions.AccountApiPolicy)]
     public async Task<ActionResult<DeliveryAddressResponseDto>> AddDeliveryAddress(
         [FromBody] DeliveryAddressRequestDto request)
     {
@@ -85,7 +85,7 @@ public class UserAccountController : ControllerBase
     // GET api/user/getDeliveryAddresses
     [HttpGet("getDeliveryAddresses")]
     [Authorize]
-    [EnableRateLimiting("Auth")]
+    [EnableRateLimiting(RateLimitingExtensions.AccountApiPolicy)]
     public async Task<ActionResult<List<DeliveryAddressResponseDto>>> GetDeliveryAddresses()
     {
         var userId = User.GetRequiredUserId();

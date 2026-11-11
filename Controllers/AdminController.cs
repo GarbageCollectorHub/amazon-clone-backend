@@ -5,7 +5,9 @@ using AMZN.Models.Category;
 using AMZN.Models.User;
 using AMZN.Services.Admin;
 using AMZN.Services.Auth;
+using AMZN.Security.Tokens;
 using AMZN.Shared.Exceptions;
+using AMZN.Shared.Limits;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -14,9 +16,6 @@ namespace AMZN.Controllers;
 
 public class AdminController : Controller
 {
-    private const string AccessTokenCookieName = "amzn_access";
-    private const string RefreshTokenCookieName = "amzn_refresh";
-
     private readonly IAuthService _authService;
     private readonly ILogger<AdminController> _logger;
     private readonly AdminUserService _adminUserService;
@@ -94,7 +93,7 @@ public class AdminController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Logout()
     {
-        string? refreshToken = Request.Cookies[RefreshTokenCookieName];
+        string? refreshToken = Request.Cookies[JwtConfiguration.RefreshTokenCookieName];
         try
         {
             await _authService.RevokeRefreshTokenAsync(refreshToken);
@@ -124,8 +123,8 @@ public class AdminController : Controller
     [Authorize(Roles = "Admin")]
     [ValidateAntiForgeryToken]
     [EnableRateLimiting(RateLimitingExtensions.ImageUploadsPolicy)]
-    [RequestSizeLimit(25 * 1024 * 1024)]
-    [RequestFormLimits(MultipartBodyLengthLimit = 25 * 1024 * 1024)]
+    [RequestSizeLimit(ImageUploadLimits.MaxRequestBytes)]
+    [RequestFormLimits(MultipartBodyLengthLimit = ImageUploadLimits.MaxRequestBytes)]
     public async Task<IActionResult> AddCategory(
         [Bind(Prefix = "Form")] CategoryFormModel form,
         [FromServices] AdminCategoryService adminCategoryService)
@@ -189,12 +188,12 @@ public class AdminController : Controller
     private void SetAuthCookies(AuthResponseDto response)
     {
         Response.Cookies.Append(
-            AccessTokenCookieName,
+            JwtConfiguration.AccessTokenCookieName,
             response.AccessToken,
             CreateCookieOptions(TimeSpan.FromSeconds(response.ExpiresInSeconds)));
 
         Response.Cookies.Append(
-            RefreshTokenCookieName,
+            JwtConfiguration.RefreshTokenCookieName,
             response.RefreshToken,
             CreateCookieOptions(TimeSpan.FromSeconds(response.RefreshExpiresInSeconds)));
     }
@@ -221,7 +220,7 @@ public class AdminController : Controller
             Path = "/"
         };
 
-        Response.Cookies.Delete(AccessTokenCookieName, options);
-        Response.Cookies.Delete(RefreshTokenCookieName, options);
+        Response.Cookies.Delete(JwtConfiguration.AccessTokenCookieName, options);
+        Response.Cookies.Delete(JwtConfiguration.RefreshTokenCookieName, options);
     }
 }

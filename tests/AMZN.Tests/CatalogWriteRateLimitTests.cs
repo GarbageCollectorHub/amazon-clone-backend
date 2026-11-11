@@ -31,6 +31,8 @@ public class CatalogWriteRateLimitTests
         Assert.Equal(10, host.AcceptedRequestCount);
 
         await host.AssertAllowed(brandPath, 1, secondAdmin);
-        await host.AssertAllowed("/Admin/Products/Create", 3, firstAdmin);
+        await host.AssertAllowed("/Admin/Products/Create", 10, firstAdmin);
+        using var uploadRejected = await host.Post("/Admin/Products/Create", firstAdmin);
+        Assert.Equal(HttpStatusCode.TooManyRequests, uploadRejected.StatusCode);
     }
 }

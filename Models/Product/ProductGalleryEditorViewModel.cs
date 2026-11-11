@@ -25,11 +25,6 @@
         // Для Create пустой список
         public List<ExistingProductImageViewModel> ExistingImages { get; set; } = new();
 
-        public int MaxGalleryImages { get; set; } = 10;
-
-        // Максимальный размер одного файла в байтах.
-        public long MaxFileBytes { get; set; } = 5 * 1024 * 1024;
-
         // Разрешать drag-and-drop сортировку уже существующих изображений
         // Edit -> true || Create -> false
         public bool AllowExistingReorder { get; set; }

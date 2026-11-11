@@ -5,6 +5,7 @@ using AMZN.Security.Passwords;
 using AMZN.Security.Tokens;
 using AMZN.Shared.Exceptions;
 using AMZN.Shared.Exceptions.Errors;
+using AMZN.Shared.Limits;
 using AMZN.Shared.Mapping;
 using AMZN.Shared.Transactions;
 
@@ -12,12 +13,6 @@ namespace AMZN.Services.Auth
 {
     public class AuthService : IAuthService
     {
-        // refresh token TTL берём из конфига Jwt:RefreshDays.  + ограничиваем на 1 - 365 дней (защита от кривого конфига)  // ps: в идеале валидировать конфиг на старте...
-        private const int RefreshDaysDefault = 7;
-        private const int RefreshDaysMin = 1;
-        private const int RefreshDaysMax = 365;
-
-
         private readonly IUserRepository _users;
         private readonly IUserRefreshTokenRepository _refreshTokens;
         private readonly IPasswordHasher _passwordHasher;
@@ -142,18 +137,15 @@ namespace AMZN.Services.Auth
 
         private int GetRefreshDays()
         {
-            var valueText = _config["Jwt:RefreshDays"];
+            var valueText = _config[JwtConfiguration.RefreshDaysKey];
 
             int days;
             if (!int.TryParse(valueText, out days))
             {
-                days = RefreshDaysDefault;
+                days = JwtLimits.RefreshTokenDefaultDays;
             }
 
-            if (days < RefreshDaysMin) return RefreshDaysMin;
-            if (days > RefreshDaysMax) return RefreshDaysMax;
-
-            return days;
+            return Math.Clamp(days, JwtLimits.RefreshTokenMinDays, JwtLimits.RefreshTokenMaxDays);
         }
 
 

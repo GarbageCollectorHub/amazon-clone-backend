@@ -21,7 +21,7 @@ public class CartController : ControllerBase
     // POST api/cart/add/{productId:guid}
     [HttpPost("add/{productId:guid}")]
     [Authorize]
-    [EnableRateLimiting("Auth")]
+    [EnableRateLimiting(RateLimitingExtensions.AccountApiPolicy)]
     public async Task<ActionResult<CartResponseDto>> AddToCart([FromRoute] Guid productId)
     {
         var userId = User.GetRequiredUserId();
@@ -32,7 +32,7 @@ public class CartController : ControllerBase
     // POST api/cart/remove/{productId:guid}
     [HttpPost("remove/{productId:guid}")]
     [Authorize]
-    [EnableRateLimiting("Auth")]
+    [EnableRateLimiting(RateLimitingExtensions.AccountApiPolicy)]
     public async Task<ActionResult<CartResponseDto>> RemoveFromCart([FromRoute] Guid productId)
     {
         var userId = User.GetRequiredUserId();
@@ -43,7 +43,7 @@ public class CartController : ControllerBase
     // POST api/cart/clear
     [HttpPost("clear")]
     [Authorize]
-    [EnableRateLimiting("Auth")]
+    [EnableRateLimiting(RateLimitingExtensions.AccountApiPolicy)]
     public async Task<ActionResult<CartResponseDto>> ClearCart()
     {
         var userId = User.GetRequiredUserId();
@@ -54,7 +54,7 @@ public class CartController : ControllerBase
     // GET api/cart/get
     [HttpGet("get")]
     [Authorize]
-    [EnableRateLimiting("Auth")]
+    [EnableRateLimiting(RateLimitingExtensions.AccountApiPolicy)]
     public async Task<ActionResult<CartResponseDto>> GetCart()
     {
         var userId = User.GetRequiredUserId();
@@ -65,7 +65,7 @@ public class CartController : ControllerBase
     // POST api/cart/increaseQuantity
     [HttpPost("increaseQuantity/{productId}")]
     [Authorize]
-    [EnableRateLimiting("Auth")]
+    [EnableRateLimiting(RateLimitingExtensions.AccountApiPolicy)]
     public async Task<ActionResult<CartResponseDto>> IncreaseQuantity([FromRoute] string productId)
     {
         var userId = User.GetRequiredUserId();
@@ -86,7 +86,7 @@ public class CartController : ControllerBase
     // POST / api/cart/decreaseQuantity
     [HttpPost("decreaseQuantity/{productId}")]
     [Authorize]
-    [EnableRateLimiting("Auth")]
+    [EnableRateLimiting(RateLimitingExtensions.AccountApiPolicy)]
     public async Task<ActionResult<CartResponseDto>> DecreaseQuantity([FromRoute] string productId)
     {
         var userId = User.GetRequiredUserId();

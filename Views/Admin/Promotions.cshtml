@@ -1,4 +1,5 @@
 ﻿@model AMZN.Models.Promotions.PromotionViewModel
+@using AMZN.Shared.Limits
 @using System.Security.Claims
 @{
     ViewData["Title"] = "Create promotion";
@@ -67,7 +68,7 @@
                     <div class="field-group">
                         <label asp-for="Form.DiscountPercent" class="form-label">Discount (%)</label>
                         <input asp-for="Form.DiscountPercent"
-                               type="number" min="1" max="99"
+                               type="number" min="@CatalogLimits.DiscountPercentMin" max="@CatalogLimits.DiscountPercentMax"
                                class="form-control" />
                         <span asp-validation-for="Form.DiscountPercent" class="text-danger"></span>
                     </div>

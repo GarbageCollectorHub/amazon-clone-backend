@@ -1,6 +1,7 @@
 ﻿namespace AMZN.Services.Storage.Cloud;
 
 using Azure;
+using AMZN.Shared.Limits;
 using AMZN.Shared.Validation.Files;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
@@ -12,7 +13,6 @@ using System.Data.Common;
 public class CloudStorageService : ICloudStorageService
 {
     private const string ContainerName = "amzn-storage";
-    private const long MaxImageBytes = 5 * 1024 * 1024;
     private readonly BlobContainerClient? _containerClient;
     private readonly ILogger<CloudStorageService> _logger;
     private readonly IConfiguration _configuration;
@@ -47,7 +47,7 @@ public class CloudStorageService : ICloudStorageService
         if (!_configuration.GetValue("ImageUploads:Enabled", true))
             throw new InvalidOperationException("Image uploads are currently disabled. Please try again later.");
 
-        if (!ImageFileRules.TryValidate(file, MaxImageBytes, out var error))
+        if (!ImageFileRules.TryValidate(file, ImageUploadLimits.MaxFileBytes, out var error))
             throw new InvalidOperationException(error);
 
         var ext = Path.GetExtension(file.FileName).ToLowerInvariant();

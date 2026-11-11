@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using AMZN.Shared.Limits;
 using AMZN.Shared.Validation.Attributes;
 
 namespace AMZN.Models.Category;
@@ -6,13 +7,13 @@ namespace AMZN.Models.Category;
 public class CategoryFormModel
 {
     [Required(ErrorMessage = "Name is required")]
-    [StringLength(20, MinimumLength = 2, ErrorMessage = "Name must be between 2 and 20 characters")]
+    [StringLength(CatalogLimits.CategoryNameMaxLength, MinimumLength = CatalogLimits.CategoryNameMinLength, ErrorMessage = "Name must be between {2} and {1} characters")]
     public string Name { get; set; } = null!;
     public string? ParentCategory { get; set; }
     [Required(ErrorMessage = "Description is required")]
-    [StringLength(100, MinimumLength = 2, ErrorMessage = "Description must be between 2 and 100 characters")]
+    [StringLength(CatalogLimits.CategoryDescriptionMaxLength, MinimumLength = CatalogLimits.CategoryDescriptionMinLength, ErrorMessage = "Description must be between {2} and {1} characters")]
     public string Description { get; set; } = null!;
     [RequiredFile(ErrorMessage = "Image is required")]
-    [ImageFile(5 * 1024 * 1024)]
+    [ImageFile(ImageUploadLimits.MaxFileBytes)]
     public IFormFile? Image { get; set; }
 }

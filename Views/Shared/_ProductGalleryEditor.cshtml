@@ -1,10 +1,11 @@
 @model ProductGalleryEditorViewModel
-<div class="product-gallery-editor js-product-gallery-editor" data-max-gallery-images="@Model.MaxGalleryImages" data-max-file-bytes="@Model.MaxFileBytes" data-allow-existing-reorder="@Model.AllowExistingReorder.ToString().ToLowerInvariant()" data-existing-ids-field-prefix="@Model.ExistingIdsFieldPrefix" data-is-edit-mode="@Model.IsEditMode.ToString().ToLowerInvariant()">
+@using AMZN.Shared.Limits
+<div class="product-gallery-editor js-product-gallery-editor" data-max-gallery-images="@ImageUploadLimits.MaxGalleryImages" data-max-file-bytes="@ImageUploadLimits.MaxFileBytes" data-allow-existing-reorder="@Model.AllowExistingReorder.ToString().ToLowerInvariant()" data-existing-ids-field-prefix="@Model.ExistingIdsFieldPrefix" data-is-edit-mode="@Model.IsEditMode.ToString().ToLowerInvariant()">
     <div class="product-gallery-editor__topbar">
         <h2 class="panel__title">@Model.Title</h2>
         <span class="js-pge-count gallery-count" hidden></span>
     </div>
-    <p class="product-gallery-editor__description">@(Model.AllowExistingReorder ? $"Drag images to reorder. Up to {Model.MaxGalleryImages} images." : $"Add up to {Model.MaxGalleryImages} gallery images.")</p>
+    <p class="product-gallery-editor__description">@(Model.AllowExistingReorder ? $"Drag images to reorder. Up to {ImageUploadLimits.MaxGalleryImages} images." : $"Add up to {ImageUploadLimits.MaxGalleryImages} gallery images.")</p>
     <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3 js-pge-toast-container" style="z-index: 1080;"></div>
     @if (!string.IsNullOrWhiteSpace(Model.ExistingIdsFieldPrefix))
     {
@@ -43,7 +44,7 @@
             </div>
         </div>
     </div>
-    <p class="image-hint">JPG, PNG or WebP. Max 5 MB per image.</p>
+    <p class="image-hint">JPG, PNG or WebP. Max @ImageUploadLimits.MaxFileMiB MiB per image.</p>
     @if (Model.IsEditMode)
     {
         <p class="gallery-new-note" hidden>New images are added after existing images when you save.</p>

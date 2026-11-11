@@ -4,6 +4,7 @@ using AMZN.Repositories.Brands;
 using AMZN.Repositories.Categories;
 using AMZN.Repositories.Products;
 using AMZN.Services.Storage.Cloud;
+using AMZN.Shared.Limits;
 
 namespace AMZN.Services.Admin
 {
@@ -76,7 +77,7 @@ namespace AMZN.Services.Admin
                     foreach (var file in form.Images)
                     {
                         if (file == null || file.Length == 0) continue;
-                        if (galleryUrls.Count >= ProductCreateFormModel.MaxGalleryImages) break;
+                        if (galleryUrls.Count >= ImageUploadLimits.MaxGalleryImages) break;
 
                         string url = await _cloud.SaveImageAsync(file, cancellationToken);
                         galleryUrls.Add(url);
@@ -253,8 +254,8 @@ namespace AMZN.Services.Admin
                 ?? new List<IFormFile>();
 
             int finalGalleryImageCount = remainingExistingImages.Count + newGalleryImageFiles.Count;
-            if (finalGalleryImageCount > ProductEditFormModel.MaxGalleryImages)
-                throw new InvalidOperationException("Too many gallery images (max 10)");
+            if (finalGalleryImageCount > ImageUploadLimits.MaxGalleryImages)
+                throw new InvalidOperationException($"Too many gallery images (max {ImageUploadLimits.MaxGalleryImages})");
 
             product.Title = form.Title.Trim();
             product.Description = string.IsNullOrWhiteSpace(form.Description) ? null : form.Description.Trim();

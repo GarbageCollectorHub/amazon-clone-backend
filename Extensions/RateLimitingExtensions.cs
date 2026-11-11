@@ -19,6 +19,7 @@ namespace AMZN.Extensions
         public const string LoginPolicy = "Login";
         public const string RegistrationPolicy = "Registration";
         public const string RefreshPolicy = "Refresh";
+        public const string AccountApiPolicy = "Auth";
 
         public static IServiceCollection AddAmznRateLimiting(this IServiceCollection services)
         {
@@ -77,10 +78,10 @@ namespace AMZN.Extensions
                 AddIpPolicy(options, RegistrationPolicy, 3, TimeSpan.FromMinutes(10));
                 AddIpPolicy(options, RefreshPolicy, 30, TimeSpan.FromMinutes(1));
 
-                AddAccountPolicy(options, ImageUploadsPolicy, 3);
+                AddAccountPolicy(options, ImageUploadsPolicy, 10);
                 AddAccountPolicy(options, CatalogWritesPolicy, 10);
 
-                options.AddPolicy("Auth", context =>
+                options.AddPolicy(AccountApiPolicy, context =>
                 {
                     // При деплое за прокси(Azure/AWS/K8s) RemoteIpAddress может приходить в X-Forwarded-For.
                     // Тогда нужен ForwardedHeaders (см. Extensions/ForwardedHeadersExtensions).

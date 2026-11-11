@@ -7,6 +7,7 @@ using AMZN.Security.Passwords;
 using AMZN.Services.Auth;
 using AMZN.Shared.Exceptions;
 using AMZN.Shared.Exceptions.Errors;
+using AMZN.Shared.Limits;
 using AMZN.Shared.Transactions;
 using Microsoft.EntityFrameworkCore.Scaffolding.Metadata;
 
@@ -54,9 +55,9 @@ public class AccountService
         if (!string.IsNullOrEmpty(dto.PhoneNumber)) user.PhoneNumber = dto.PhoneNumber;
         if (dto.BirthDate != null)
         {
-            if (CheckUserAge(dto.BirthDate) < 18)
+            if (CheckUserAge(dto.BirthDate) < UserLimits.ProfileMinAgeYears)
             {
-                throw new ApiException(ErrorCodes.ValidationError, "User must be at least 18 years old",
+                throw new ApiException(ErrorCodes.ValidationError, $"User must be at least {UserLimits.ProfileMinAgeYears} years old",
                     StatusCodes.Status400BadRequest);
             }
 

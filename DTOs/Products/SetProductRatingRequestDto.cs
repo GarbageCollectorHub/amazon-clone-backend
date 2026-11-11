@@ -1,10 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using AMZN.Shared.Limits;
+using AMZN.Shared.Validation;
 
 namespace AMZN.DTOs.Products
 {
     public class SetProductRatingRequestDto
     {
-        [Range(1, 5, ErrorMessage = "Rating must be between 1 and 5")]
+        [Range(ProductFeedbackLimits.RatingMin, ProductFeedbackLimits.RatingMax, ErrorMessage = ValidationMessages.RatingRange)]
         public byte Rating { get; set; }
     }
 }

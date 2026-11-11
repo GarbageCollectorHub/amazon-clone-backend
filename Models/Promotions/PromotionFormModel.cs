@@ -1,20 +1,21 @@
 using System.ComponentModel.DataAnnotations;
+using AMZN.Shared.Limits;
 
 namespace AMZN.Models.Promotions;
 
 public class PromotionFormModel : IValidatableObject
 {
     [Required(ErrorMessage = "Name is required")]
-    [StringLength(20, MinimumLength = 2, ErrorMessage = "Name must be between 2 and 20 characters")]
+    [StringLength(CatalogLimits.PromotionNameMaxLength, MinimumLength = CatalogLimits.PromotionNameMinLength, ErrorMessage = "Name must be between {2} and {1} characters")]
     public string Name { get; set; } = null!;
-    [StringLength(100, MinimumLength = 2, ErrorMessage = "Description must be between 2 and 100 characters")]
+    [StringLength(CatalogLimits.PromotionDescriptionMaxLength, MinimumLength = CatalogLimits.PromotionDescriptionMinLength, ErrorMessage = "Description must be between {2} and {1} characters")]
     public string? Description { get; set; } = null!;
     [Required(ErrorMessage = "Application type is required")]
     [RegularExpression("^(product|category)$", ErrorMessage = "Application type is not valid")]
     public string ApplyTo { get; set; } = null!;
     [Required(ErrorMessage = "Product / Category name is required")]
     public string ProductTitle { get; set; } = null!;
-    [Range(1, 99, ErrorMessage = "Discount must be between 1 and 99")]
+    [Range(CatalogLimits.DiscountPercentMin, CatalogLimits.DiscountPercentMax, ErrorMessage = "Discount must be between {1} and {2}")]
     [Required(ErrorMessage = "Discount is required")]
     [Display(Name = "Discount (%)")]
     public int? DiscountPercent { get; set; }

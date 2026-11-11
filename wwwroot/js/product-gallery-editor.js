@@ -16,8 +16,8 @@ function initProductGalleryEditor(root) {
     const existingIdsContainer = root.querySelector(".js-pge-existing-ids-container");
 
     // settings для data-attributes
-    const maxGalleryImages = Number(root.dataset.maxGalleryImages || "10");
-    const maxFileBytes = Number(root.dataset.maxFileBytes || (5 * 1024 * 1024));
+    const maxGalleryImages = Number(root.dataset.maxGalleryImages);
+    const maxFileBytes = Number(root.dataset.maxFileBytes);
     const allowExistingReorder = root.dataset.allowExistingReorder === "true";
     const existingIdsFieldPrefix = root.dataset.existingIdsFieldPrefix || "";
     const isEditMode = root.dataset.isEditMode === "true";

@@ -22,6 +22,7 @@ using AMZN.Services.Products;
 using AMZN.Services.Products.Questions;
 using AMZN.Services.Search;
 using AMZN.Services.Storage.Cloud;
+using AMZN.Shared.Limits;
 using AMZN.Shared.Transactions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Data.SqlClient;
@@ -173,33 +174,18 @@ builder.Services.AddAmznRateLimiting();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        const int MinJwtKeyBytes = 32; // HS256(HMAC with SHA-256)  -> 256 bit secret
-
-        var keyBase64 = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("Jwt:Key is missing");
-
-        byte[] keyBytes;
-        try
-        {
-            keyBytes = Convert.FromBase64String(keyBase64);
-        }
-        catch (FormatException ex)
-        {
-            throw new InvalidOperationException("Jwt:Key must be a valid Base64 string.", ex);
-        }
-
-        if (keyBytes.Length < MinJwtKeyBytes)
-            throw new InvalidOperationException($"Jwt:Key is too short. Need at least {MinJwtKeyBytes} bytes for HS256.");
+        var keyBytes = JwtConfiguration.ReadSigningKey(builder.Configuration);
 
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidIssuer = builder.Configuration[JwtConfiguration.IssuerKey],
 
             ValidateAudience = true,
-            ValidAudience = builder.Configuration["Jwt:Audience"],
+            ValidAudience = builder.Configuration[JwtConfiguration.AudienceKey],
 
             ValidateLifetime = true,
-            ClockSkew = TimeSpan.FromSeconds(30),
+            ClockSkew = TimeSpan.FromSeconds(JwtLimits.ClockSkewSeconds),
 
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
@@ -217,7 +203,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                     return Task.CompletedTask;
                 }
 
-                string? token = context.Request.Cookies["amzn_access"];
+                string? token = context.Request.Cookies[JwtConfiguration.AccessTokenCookieName];
 
                 if (!string.IsNullOrWhiteSpace(token))
                 {

@@ -1,10 +1,13 @@
 ﻿using AMZN.Data.Entities;
+using AMZN.Shared.Limits;
 using Microsoft.EntityFrameworkCore;
 
 namespace AMZN.Data;
 
 public class DataContext: DbContext
 {
+    private const string MoneyColumnType = "decimal(18,2)";
+
     public DbSet<User> Users { get; private set; } = null!;
     public DbSet<UserRefreshToken> UserRefreshTokens { get; private set; } = null!;
 
@@ -88,18 +91,18 @@ public class DataContext: DbContext
             p.HasIndex(x => x.Title);
 
             p.Property(x => x.Title)
-                .HasMaxLength(256)
+                .HasMaxLength(ProductLimits.TitleMaxLength)
                 .IsRequired();
 
             p.Property(x => x.PrimaryImageUrl)
-                .HasMaxLength(2048)
+                .HasMaxLength(ProductLimits.ImageUrlMaxLength)
                 .IsRequired();
 
             p.Property(x => x.CurrentPrice)
-                .HasColumnType("decimal(18,2)");
+                .HasColumnType(MoneyColumnType);
 
             p.Property(x => x.OriginalPrice)
-                .HasColumnType("decimal(18,2)");
+                .HasColumnType(MoneyColumnType);
 
             p.HasOne(x => x.Category)
                 .WithMany(c => c.Products)
@@ -118,13 +121,13 @@ public class DataContext: DbContext
 
             p.ToTable(t =>
             {
-                t.HasCheckConstraint("CK_Product_CurrentPrice", "CurrentPrice >= 0");
+                t.HasCheckConstraint("CK_Product_CurrentPrice", $"CurrentPrice >= {ProductLimits.PriceMin}");
 
                 t.HasCheckConstraint("CK_Product_OriginalPrice",
                     "OriginalPrice IS NULL OR OriginalPrice >= CurrentPrice");
                 t.HasCheckConstraint("CK_Product_RatingSum", "RatingSum >= 0");
                 t.HasCheckConstraint("CK_Product_RatingCount", "RatingCount >= 0");
-                t.HasCheckConstraint("CK_Product_StockQuantity", "StockQuantity >= 0");
+                t.HasCheckConstraint("CK_Product_StockQuantity", $"StockQuantity >= {ProductLimits.StockMin}");
             });
         });
 
@@ -133,7 +136,7 @@ public class DataContext: DbContext
             i.HasIndex(x => x.ProductId);
 
             i.Property(x => x.Url)
-                .HasMaxLength(2048)
+                .HasMaxLength(ProductLimits.ImageUrlMaxLength)
                 .IsRequired();
 
             i.HasOne(x => x.Product)
@@ -171,7 +174,7 @@ public class DataContext: DbContext
 
             r.ToTable(t =>
             {
-                t.HasCheckConstraint("CK_ProductRating_Value", "Value >= 1 AND Value <= 5");
+                t.HasCheckConstraint("CK_ProductRating_Value", $"Value >= {ProductFeedbackLimits.RatingMin} AND Value <= {ProductFeedbackLimits.RatingMax}");
             });
         });
 
@@ -184,11 +187,11 @@ public class DataContext: DbContext
             r.HasIndex(x => new { x.ProductId, x.CreatedAt });
 
             r.Property(x => x.Title)
-                .HasMaxLength(120)
+                .HasMaxLength(ProductFeedbackLimits.ReviewTitleMaxLength)
                 .IsRequired();
 
             r.Property(x => x.Text)
-                .HasMaxLength(4000)
+                .HasMaxLength(ProductFeedbackLimits.ReviewTextMaxLength)
                 .IsRequired();
 
             r.HasOne(x => x.Product)
@@ -208,7 +211,7 @@ public class DataContext: DbContext
             q.HasIndex(x => new { x.ProductId, x.CreatedAt });
 
             q.Property(x => x.Text)
-                .HasMaxLength(1024)
+                .HasMaxLength(ProductFeedbackLimits.QuestionTextMaxLength)
                 .IsRequired();
 
             q.HasOne(x => x.Product)
@@ -228,7 +231,7 @@ public class DataContext: DbContext
             a.HasIndex(x => new { x.QuestionId, x.CreatedAt });
 
             a.Property(x => x.Text)
-                .HasMaxLength(2048)
+                .HasMaxLength(ProductFeedbackLimits.AnswerTextMaxLength)
                 .IsRequired();
 
             a.HasOne(x => x.Question)
@@ -284,7 +287,7 @@ public class DataContext: DbContext
         modelBuilder.Entity<Brand>(b =>
         {
             b.Property(x => x.Name)
-                .HasMaxLength(128)
+                .HasMaxLength(CatalogLimits.BrandNameStorageMaxLength)
                 .IsRequired();
 
             b.HasIndex(x => x.Name)
@@ -338,7 +341,7 @@ public class DataContext: DbContext
                 .HasForeignKey(x => x.PaymentMethodId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            o.Property(x => x.TotalAmount).HasColumnType("decimal(18,2)");
+            o.Property(x => x.TotalAmount).HasColumnType(MoneyColumnType);
 
             o.Property(x => x.Status)
                 .HasConversion<string>()
@@ -362,6 +365,6 @@ public class DataContext: DbContext
 
         modelBuilder.Entity<OrderItem>()
             .Property(x => x.UnitPrice)
-            .HasColumnType("decimal(18,2)");
+            .HasColumnType(MoneyColumnType);
     }
 }

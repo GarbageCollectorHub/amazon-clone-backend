@@ -13,6 +13,7 @@
     });
 
     document.querySelectorAll(".js-primary-image-input").forEach(function (input) {
+        const maxFileBytes = Number(input.dataset.maxFileBytes);
         const panel = input.closest(".primary-image-panel");
         const preview = panel.querySelector(".js-primary-image-preview");
         const fileName = panel.querySelector(".js-primary-image-name");
@@ -35,9 +36,9 @@
             }
             const valid = /\.(jpe?g|png|webp)$/i.test(file.name)
                 && (!file.type || ["image/jpeg", "image/png", "image/webp"].includes(file.type.toLowerCase()))
-                && file.size > 0 && file.size <= 5 * 1024 * 1024;
+                && file.size > 0 && file.size <= maxFileBytes;
             if (!valid) {
-                fileName.textContent = "Choose a JPG, PNG or WebP image up to 5 MB.";
+                fileName.textContent = `Choose a JPG, PNG or WebP image up to ${maxFileBytes / (1024 * 1024)} MiB.`;
                 fileName.classList.add("text-danger");
                 input.value = "";
                 resetPreview();

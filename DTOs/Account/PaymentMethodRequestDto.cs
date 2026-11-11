@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using AMZN.Shared.Validation;
 
 namespace AMZN.DTOs.Account;
 
@@ -9,12 +10,12 @@ public class PaymentMethodRequestDto
     
     [Display(Name = "Card Number")]
     [Required]
-    [RegularExpression(CardRegex, ErrorMessage = "Invalid {0} format")]
+    [RegularExpression(CardRegex, ErrorMessage = ValidationMessages.InvalidFormat)]
     public string CardNumber { get; set; } = "";
     
     [Display(Name = "CVV")]
     [Required]
-    [RegularExpression(CvvRegex, ErrorMessage = "Invalid {0} format")]
+    [RegularExpression(CvvRegex, ErrorMessage = ValidationMessages.InvalidFormat)]
     public string Cvv { get; set; } = "";
     
     [Display(Name = "Expiration Date")]

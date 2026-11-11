@@ -61,7 +61,7 @@ namespace AMZN.Controllers.Api
         // GET api/auth/me
         [HttpGet("me")]
         [Authorize]
-        [EnableRateLimiting("Auth")]
+        [EnableRateLimiting(RateLimitingExtensions.AccountApiPolicy)]
         public ActionResult<MeResponseDto> Me()
         {
             string? userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier);
