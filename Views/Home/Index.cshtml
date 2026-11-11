@@ -29,6 +29,14 @@
             </a>
         </section>
     }
+    @if (User.Identity?.IsAuthenticated != true)
+    {
+        <p class="dashboard-signin-note">
+            <button type="button" class="dashboard-signin-note__link" data-bs-toggle="modal" data-bs-target="#authModal">Sign in</button>
+            or <a asp-controller="Admin" asp-action="SignUp">create an account</a> to manage your products.
+            Admin accounts can also manage brands, categories and promotions.
+        </p>
+    }
     <div class="dashboard-sections">
         <section class="dashboard-section">
             <h2>Product management</h2>

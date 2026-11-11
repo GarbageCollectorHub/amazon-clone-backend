@@ -48,6 +48,24 @@
     gap: 24px;
     margin-top: 44px;
 }
+.dashboard-signin-note {
+    margin: 20px 0 0;
+    color: var(--ui-muted);
+    font-size: 15px;
+    line-height: 1.6;
+}
+.dashboard-signin-note__link {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--bs-link-color);
+    font: inherit;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+.dashboard-signin-note + .dashboard-sections {
+    margin-top: 24px;
+}
 .dashboard-section {
     min-width: 0;
     padding: 22px;
