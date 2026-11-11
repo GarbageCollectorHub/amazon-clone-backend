@@ -164,6 +164,7 @@ public class AdminController : Controller
     [HttpPost]
     [Authorize(Roles = "Admin")]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting(RateLimitingExtensions.CatalogWritesPolicy)]
     public async Task<IActionResult> AddPromotion([Bind(Prefix = "Form")] PromotionFormModel form)
     {
         if (ModelState.IsValid)

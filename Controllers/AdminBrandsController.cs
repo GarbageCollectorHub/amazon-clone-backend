@@ -1,8 +1,10 @@
 ﻿using AMZN.Data.Entities;
+using AMZN.Extensions;
 using AMZN.Models.Brands;
 using AMZN.Services.BrandService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace AMZN.Controllers
 {
@@ -33,6 +35,7 @@ namespace AMZN.Controllers
 
         [HttpPost("Create")]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting(RateLimitingExtensions.CatalogWritesPolicy)]
         public async Task<IActionResult> Create(BrandCreateViewModel vm)
         {
             if (!ModelState.IsValid)

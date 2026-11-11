@@ -15,6 +15,7 @@ namespace AMZN.Extensions
     public static class RateLimitingExtensions
     {
         public const string ImageUploadsPolicy = "ImageUploads";
+        public const string CatalogWritesPolicy = "CatalogWrites";
         public const string LoginPolicy = "Login";
         public const string RegistrationPolicy = "Registration";
         public const string RefreshPolicy = "Refresh";
@@ -39,7 +40,7 @@ namespace AMZN.Extensions
                     http.Response.StatusCode = StatusCodes.Status429TooManyRequests;
                     string? policy = http.GetEndpoint()?.Metadata.GetMetadata<EnableRateLimitingAttribute>()?.PolicyName;
                     bool isMvcRegistration = policy == RegistrationPolicy && !http.Request.Path.StartsWithSegments("/api");
-                    if (policy == ImageUploadsPolicy || isMvcRegistration)
+                    if (policy is ImageUploadsPolicy or CatalogWritesPolicy || isMvcRegistration)
                     {
                         var result = new ViewResult
                         {
@@ -48,9 +49,12 @@ namespace AMZN.Extensions
                             ViewData = new ViewDataDictionary(
                                 http.RequestServices.GetRequiredService<IModelMetadataProvider>(), new ModelStateDictionary())
                         };
-                        result.ViewData["LimitMessage"] = isMvcRegistration
-                            ? "You have submitted too many registration requests."
-                            : "You have submitted several product or category changes too quickly.";
+                        result.ViewData["LimitMessage"] = policy switch
+                        {
+                            RegistrationPolicy => "You have submitted too many registration requests.",
+                            CatalogWritesPolicy => "You have submitted too many brand or promotion requests.",
+                            _ => "You have submitted several product or category changes too quickly."
+                        };
                         result.ViewData["RetryAfterMinutes"] = Math.Max(1, (int)Math.Ceiling(retryAfter.TotalMinutes));
                         await result.ExecuteResultAsync(new ActionContext(http, http.GetRouteData(), new ActionDescriptor()));
                         return;
@@ -73,17 +77,8 @@ namespace AMZN.Extensions
                 AddIpPolicy(options, RegistrationPolicy, 3, TimeSpan.FromMinutes(10));
                 AddIpPolicy(options, RefreshPolicy, 30, TimeSpan.FromMinutes(1));
 
-                options.AddPolicy(ImageUploadsPolicy, context =>
-                {
-                    var userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
-                    var key = userId != null ? $"user:{userId}" : $"ip:{context.Connection.RemoteIpAddress}";
-                    return RateLimitPartition.GetFixedWindowLimiter(key, _ => new FixedWindowRateLimiterOptions
-                    {
-                        PermitLimit = 3,
-                        Window = TimeSpan.FromMinutes(1),
-                        QueueLimit = 0
-                    });
-                });
+                AddAccountPolicy(options, ImageUploadsPolicy, 3);
+                AddAccountPolicy(options, CatalogWritesPolicy, 10);
 
                 options.AddPolicy("Auth", context =>
                 {
@@ -118,6 +113,21 @@ namespace AMZN.Extensions
                     Window = window,
                     QueueLimit = 0
                 }));
+        }
+
+        private static void AddAccountPolicy(RateLimiterOptions options, string name, int limit)
+        {
+            options.AddPolicy(name, context =>
+            {
+                var userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var key = userId != null ? $"user:{userId}" : $"ip:{context.Connection.RemoteIpAddress}";
+                return RateLimitPartition.GetFixedWindowLimiter(key, _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = limit,
+                    Window = TimeSpan.FromMinutes(1),
+                    QueueLimit = 0
+                });
+            });
         }
 
         public static WebApplication UseAmznRateLimiting(this WebApplication app)
