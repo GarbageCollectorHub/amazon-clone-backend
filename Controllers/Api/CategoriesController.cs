@@ -22,18 +22,18 @@ namespace AMZN.Controllers.Api
         [HttpGet("root")]
         [AllowAnonymous]
         [OutputCache(Duration = 20)]
-        public async Task<ActionResult<List<CategoryListItemDto>>> GetRoot()
+        public async Task<ActionResult<List<CategoryListItemDto>>> GetRoot(CancellationToken ct)
         {
-            var dto = await _categories.GetRootAsync();
+            var dto = await _categories.GetRootAsync(ct);
             return Ok(dto);
         }
 
         [HttpGet]
         [AllowAnonymous]
         [OutputCache(Duration = 20)]
-        public async Task<ActionResult<List<CategoryListItemDto>>> GetByParent([FromQuery] Guid parentId)
+        public async Task<ActionResult<List<CategoryListItemDto>>> GetByParent([FromQuery] Guid parentId, CancellationToken ct)
         {
-            var dto = await _categories.GetByParentAsync(parentId);
+            var dto = await _categories.GetByParentAsync(parentId, ct);
             return Ok(dto);
         }
 

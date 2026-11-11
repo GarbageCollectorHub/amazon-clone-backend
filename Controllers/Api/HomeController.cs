@@ -22,17 +22,17 @@ namespace AMZN.Controllers.Api
         [HttpGet]
         [AllowAnonymous]
         [OutputCache(Duration = 15)]
-        public async Task<ActionResult<HomeResponseDto>> GetHome()
+        public async Task<ActionResult<HomeResponseDto>> GetHome(CancellationToken ct)
         {
-            HomeResponseDto dto = await _homeService.GetHomeAsync();
+            HomeResponseDto dto = await _homeService.GetHomeAsync(ct);
             return Ok(dto);
         }
 
         [HttpGet("last-viewed")]
         [AllowAnonymous]
-        public async Task<ActionResult<List<ProductCardDto>>> GetLastViewed([FromQuery] HomeLastViewedQueryDto query)
+        public async Task<ActionResult<List<ProductCardDto>>> GetLastViewed([FromQuery] HomeLastViewedQueryDto query, CancellationToken ct)
         {
-            List<ProductCardDto> dto = await _homeService.GetLastViewedAsync(query.ProductIds);
+            List<ProductCardDto> dto = await _homeService.GetLastViewedAsync(query.ProductIds, ct);
             return Ok(dto);
         }
     }

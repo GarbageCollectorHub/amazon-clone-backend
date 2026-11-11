@@ -20,16 +20,16 @@ namespace AMZN.Services.Search
             _searchRepository = searchRepository;
         }
 
-        public async Task<SearchSuggestionsResponseDto> GetSuggestionsAsync(string? query)
+        public async Task<SearchSuggestionsResponseDto> GetSuggestionsAsync(string? query, CancellationToken ct)
         {
             var normalizedQuery = SearchQueryHelper.NormalizeQuery(query);
 
             if (normalizedQuery.Length < CatalogLimits.SearchMinLength)
                 return new SearchSuggestionsResponseDto();
 
-            var products = await _searchRepository.GetProductSuggestionsAsync(normalizedQuery, ProductSuggestionsTake);
-            var categories = await _searchRepository.GetCategorySuggestionsAsync(normalizedQuery, CategorySuggestionsTake);
-            var brands = await _searchRepository.GetBrandSuggestionsAsync(normalizedQuery, BrandSuggestionsTake);
+            var products = await _searchRepository.GetProductSuggestionsAsync(normalizedQuery, ProductSuggestionsTake, ct);
+            var categories = await _searchRepository.GetCategorySuggestionsAsync(normalizedQuery, CategorySuggestionsTake, ct);
+            var brands = await _searchRepository.GetBrandSuggestionsAsync(normalizedQuery, BrandSuggestionsTake, ct);
 
             return new SearchSuggestionsResponseDto
             {

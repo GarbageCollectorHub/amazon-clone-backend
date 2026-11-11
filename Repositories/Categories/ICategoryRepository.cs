@@ -12,13 +12,13 @@ public interface ICategoryRepository
     List<Category> GetAll();
 
     Task<List<Category>> GetAllAsync();
-    Task<bool> ExistsAsync(Guid id);
+    Task<bool> ExistsAsync(Guid id, CancellationToken ct = default);
     
     Category? GetByName(string name);
 
-    Task<List<CategoryListItemDto>> GetRootAsync();
-    Task<List<CategoryListItemDto>> GetByParentAsync(Guid parentId);
+    Task<List<CategoryListItemDto>> GetRootAsync(CancellationToken ct = default);
+    Task<List<CategoryListItemDto>> GetByParentAsync(Guid parentId, CancellationToken ct = default);
     Task SaveChangesAsync();
 
-    Task<List<Guid>> GetCategoryTreeIdsAsync(Guid categoryId);
+    Task<List<Guid>> GetCategoryTreeIdsAsync(Guid categoryId, CancellationToken ct = default);
 }

@@ -14,7 +14,7 @@ namespace AMZN.Repositories.Search
             _db = db;
         }
 
-        public Task<List<Product>> GetProductSuggestionsAsync(string query, int take)
+        public Task<List<Product>> GetProductSuggestionsAsync(string query, int take, CancellationToken ct = default)
         {
             var tokens = SearchQueryHelper.SplitTokens(query);
 
@@ -42,10 +42,10 @@ namespace AMZN.Repositories.Search
                 .ThenByDescending(p => p.CreatedAt)
                 .ThenBy(p => p.Title)
                 .Take(take)
-                .ToListAsync();
+                .ToListAsync(ct);
         }
 
-        public Task<List<Category>> GetCategorySuggestionsAsync(string query, int take)
+        public Task<List<Category>> GetCategorySuggestionsAsync(string query, int take, CancellationToken ct = default)
         {
             var tokens = SearchQueryHelper.SplitTokens(query);
 
@@ -61,10 +61,10 @@ namespace AMZN.Repositories.Search
                 .ThenByDescending(c => c.Name.StartsWith(query))
                 .ThenBy(c => c.Name)
                 .Take(take)
-                .ToListAsync();
+                .ToListAsync(ct);
         }
 
-        public Task<List<Brand>> GetBrandSuggestionsAsync(string query, int take)
+        public Task<List<Brand>> GetBrandSuggestionsAsync(string query, int take, CancellationToken ct = default)
         {
             var tokens = SearchQueryHelper.SplitTokens(query);
 
@@ -80,7 +80,7 @@ namespace AMZN.Repositories.Search
                 .ThenByDescending(b => b.Name.StartsWith(query))
                 .ThenBy(b => b.Name)
                 .Take(take)
-                .ToListAsync();
+                .ToListAsync(ct);
         }
     }
 }

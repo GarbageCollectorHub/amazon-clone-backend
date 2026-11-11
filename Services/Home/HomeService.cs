@@ -29,11 +29,11 @@ namespace AMZN.Services.Home
         }
 
 
-        public async Task<HomeResponseDto> GetHomeAsync()
+        public async Task<HomeResponseDto> GetHomeAsync(CancellationToken ct)
         {
             // Все категории и прямые ProductCount/RatingCount
-            List<Category> categories = await _homeRepository.GetAllCategoriesAsync();
-            List<CategoryProductCountsDto> categoryProductCounts = await _homeRepository.GetCategoryProductCountsAsync(HomeMinRating);
+            List<Category> categories = await _homeRepository.GetAllCategoriesAsync(ct);
+            List<CategoryProductCountsDto> categoryProductCounts = await _homeRepository.GetCategoryProductCountsAsync(HomeMinRating, ct);
 
             // ProductCount/RatingCount по всей ветке категорий
             Dictionary<Guid, List<Category>> subcategoriesByParentId = BuildSubcategoriesByParentId(categories);
@@ -45,12 +45,12 @@ namespace AMZN.Services.Home
 
             // Категории для 2x2 блоков и товары для них
             List<Category> blockCategories = BuildBlockCategories(categories, categoryCountsById, topCategoryIds);
-            List<HomeCategoryBlockDto> categoryBlocks = await BuildCategoryBlocksAsync(blockCategories, subcategoriesByParentId);
+            List<HomeCategoryBlockDto> categoryBlocks = await BuildCategoryBlocksAsync(blockCategories, subcategoriesByParentId, ct);
 
             // Отдельные товарные секции
-            List<Product> popularProducts = await _homeRepository.GetTopRatedProductsAsync(HomeMinRating, PopularProductsCount);
-            List<Product> productsUnderTwenty = await _homeRepository.GetTopRatedProductsUnderPriceAsync(UnderTwentyMaxPrice, HomeMinRating, ProductsUnderTwentyCount);
-            List<Product> moreProducts = await _homeRepository.GetTopRatedProductsAsync(MoreProductsMinRating, MoreProductsCount);
+            List<Product> popularProducts = await _homeRepository.GetTopRatedProductsAsync(HomeMinRating, PopularProductsCount, ct);
+            List<Product> productsUnderTwenty = await _homeRepository.GetTopRatedProductsUnderPriceAsync(UnderTwentyMaxPrice, HomeMinRating, ProductsUnderTwentyCount, ct);
+            List<Product> moreProducts = await _homeRepository.GetTopRatedProductsAsync(MoreProductsMinRating, MoreProductsCount, ct);
 
             // Popular categories без top 3
             List<HomeCategoryCardDto> popularCategories = BuildPopularCategories(categories, categoryCountsById, topCategoryIds);
@@ -67,12 +67,12 @@ namespace AMZN.Services.Home
         }
 
 
-        public async Task<List<ProductCardDto>> GetLastViewedAsync(List<Guid> productIds)
+        public async Task<List<ProductCardDto>> GetLastViewedAsync(List<Guid> productIds, CancellationToken ct)
         {
             if (productIds.Count == 0)
                 return new List<ProductCardDto>();
 
-            List<Product> products = await _homeRepository.GetProductsByIdsAsync(productIds);
+            List<Product> products = await _homeRepository.GetProductsByIdsAsync(productIds, ct);
             Dictionary<Guid, Product> productsById = products.ToDictionary(x => x.Id);
             List<ProductCardDto> result = new List<ProductCardDto>(productIds.Count);
 
@@ -86,14 +86,14 @@ namespace AMZN.Services.Home
         }
 
         // 2x2 блоки, категории + продукты
-        private async Task<List<HomeCategoryBlockDto>> BuildCategoryBlocksAsync(List<Category> blockCategories, Dictionary<Guid, List<Category>> subcategoriesByParentId)
+        private async Task<List<HomeCategoryBlockDto>> BuildCategoryBlocksAsync(List<Category> blockCategories, Dictionary<Guid, List<Category>> subcategoriesByParentId, CancellationToken ct)
         {
             List<HomeCategoryBlockDto> result = new List<HomeCategoryBlockDto>();
 
             foreach (Category blockCategory in blockCategories)
             {
                 List<Guid> categoryTreeIds = GetCategoryTreeIds(blockCategory.Id, subcategoriesByParentId);
-                List<Product> blockProducts = await _homeRepository.GetTopRatedProductsForCategoriesAsync(categoryTreeIds, HomeMinRating, CategoryBlockProductsCount);
+                List<Product> blockProducts = await _homeRepository.GetTopRatedProductsForCategoriesAsync(categoryTreeIds, HomeMinRating, CategoryBlockProductsCount, ct);
 
                 if (blockProducts.Count == 0)
                     continue;

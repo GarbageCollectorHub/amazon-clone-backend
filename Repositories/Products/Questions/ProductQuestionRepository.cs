@@ -18,29 +18,29 @@ namespace AMZN.Repositories.Products.Questions
             return _db.SaveChangesAsync();
         }
 
-        public Task<ProductQuestion?> GetQuestionByIdAsync(Guid productId, Guid questionId)
+        public Task<ProductQuestion?> GetQuestionByIdAsync(Guid productId, Guid questionId, CancellationToken ct = default)
         {
-            return _db.ProductQuestions.FirstOrDefaultAsync(x => x.ProductId == productId && x.Id == questionId);
+            return _db.ProductQuestions.FirstOrDefaultAsync(x => x.ProductId == productId && x.Id == questionId, ct);
         }
 
-        public Task<int> CountQuestionsAsync(Guid productId)
+        public Task<int> CountQuestionsAsync(Guid productId, CancellationToken ct = default)
         {
             return _db.ProductQuestions
                 .AsNoTracking()
-                .CountAsync(x => x.ProductId == productId);
+                .CountAsync(x => x.ProductId == productId, ct);
         }
 
-        public Task<List<ProductQuestionDto>> GetQuestionsPageAsync(Guid productId, int skip, int take)
+        public Task<List<ProductQuestionDto>> GetQuestionsPageAsync(Guid productId, int skip, int take, CancellationToken ct = default)
         {
             return BuildQuestionDtoQuery(productId)
                 .OrderByDescending(x => x.CreatedAt)
                 .ThenByDescending(x => x.Id)
                 .Skip(skip)
                 .Take(take)
-                .ToListAsync();
+                .ToListAsync(ct);
         }
 
-        public async Task<Dictionary<Guid, List<ProductQuestionAnswerDto>>> GetPreviewAnswersMapAsync(List<Guid> questionIds, int takePerQuestion)
+        public async Task<Dictionary<Guid, List<ProductQuestionAnswerDto>>> GetPreviewAnswersMapAsync(List<Guid> questionIds, int takePerQuestion, CancellationToken ct = default)
         {
             if (questionIds.Count == 0 || takePerQuestion <= 0)
                 return new Dictionary<Guid, List<ProductQuestionAnswerDto>>();
@@ -66,7 +66,7 @@ namespace AMZN.Repositories.Products.Questions
                         })
                         .ToList()
                 })
-                .ToListAsync();
+                .ToListAsync(ct);
 
             return previews
                 .Where(x => x.Answers.Count > 0)
@@ -83,21 +83,21 @@ namespace AMZN.Repositories.Products.Questions
             _db.ProductQuestions.Add(question);
         }
 
-        public Task<int> CountAnswersAsync(Guid questionId)
+        public Task<int> CountAnswersAsync(Guid questionId, CancellationToken ct = default)
         {
             return _db.ProductQuestionAnswers
                 .AsNoTracking()
-                .CountAsync(x => x.QuestionId == questionId);
+                .CountAsync(x => x.QuestionId == questionId, ct);
         }
 
-        public Task<List<ProductQuestionAnswerDto>> GetAnswersPageAsync(Guid questionId, int skip, int take)
+        public Task<List<ProductQuestionAnswerDto>> GetAnswersPageAsync(Guid questionId, int skip, int take, CancellationToken ct = default)
         {
             return BuildAnswerDtoQuery(questionId)
                 .OrderBy(x => x.CreatedAt)
                 .ThenBy(x => x.Id)
                 .Skip(skip)
                 .Take(take)
-                .ToListAsync();
+                .ToListAsync(ct);
         }
 
         public Task<ProductQuestionAnswerDto?> GetAnswerDtoByIdAsync(Guid questionId, Guid answerId)

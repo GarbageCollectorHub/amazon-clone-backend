@@ -65,19 +65,19 @@ namespace AMZN.Repositories.Products
                 .FirstOrDefaultAsync(x => x.Id == id);
         }
 
-        public Task<bool> ExistsAsync(Guid id)
+        public Task<bool> ExistsAsync(Guid id, CancellationToken ct = default)
         {
-            return _db.Products.AnyAsync(x => x.Id == id);
+            return _db.Products.AnyAsync(x => x.Id == id, ct);
         }
 
-        public Task<Product?> GetDetailsByIdAsync(Guid id)
+        public Task<Product?> GetDetailsByIdAsync(Guid id, CancellationToken ct = default)
         {
             return _db.Products
                 .AsNoTracking()
                 .Include(p => p.Category)
                 .Include(p => p.Brand)
                 .Include(p => p.Images)
-                .FirstOrDefaultAsync(p => p.Id == id);
+                .FirstOrDefaultAsync(p => p.Id == id, ct);
         }
 
         // MyProduct View
@@ -101,9 +101,9 @@ namespace AMZN.Repositories.Products
 
         // Catalog Page
         // кол-во Products подходящих под фильтры запроса
-        public Task<int> CountCatalogProductsAsync(ProductListQueryParams queryParams, List<Guid>? categoryIds)
+        public Task<int> CountCatalogProductsAsync(ProductListQueryParams queryParams, List<Guid>? categoryIds, CancellationToken ct = default)
         {
-            return BuildCatalogQuery(queryParams, categoryIds).CountAsync();
+            return BuildCatalogQuery(queryParams, categoryIds).CountAsync(ct);
         }
 
         // Catalog Products
@@ -111,7 +111,8 @@ namespace AMZN.Repositories.Products
             ProductListQueryParams queryParams,
             int skip,
             int take,
-            List<Guid>? categoryIds
+            List<Guid>? categoryIds,
+            CancellationToken ct = default
             )
         {
             IQueryable<Product> query = BuildCatalogQuery(queryParams, categoryIds);
@@ -120,10 +121,10 @@ namespace AMZN.Repositories.Products
             return query
                 .Skip(skip)
                 .Take(take)
-                .ToListAsync();
+                .ToListAsync(ct);
         }
 
-        public Task<List<Brand>> GetCatalogBrandsAsync(List<Guid>? categoryIds)
+        public Task<List<Brand>> GetCatalogBrandsAsync(List<Guid>? categoryIds, CancellationToken ct = default)
         {
             IQueryable<Product> productQuery = _db.Products.AsNoTracking();
 
@@ -138,7 +139,7 @@ namespace AMZN.Repositories.Products
                 .AsNoTracking()
                 .Where(b => brandIdsQuery.Contains(b.Id))
                 .OrderBy(b => b.Name)
-                .ToListAsync();
+                .ToListAsync(ct);
         }
 
         // 
@@ -308,14 +309,14 @@ namespace AMZN.Repositories.Products
             return BuildReviewDtoQuery(productId, userId).FirstOrDefaultAsync();
         }
 
-        public Task<int> CountReviewsAsync(Guid productId)
+        public Task<int> CountReviewsAsync(Guid productId, CancellationToken ct = default)
         {
             return _db.ProductReviews
                 .AsNoTracking()
-                .CountAsync(x => x.ProductId == productId);
+                .CountAsync(x => x.ProductId == productId, ct);
         }
 
-        public Task<List<ReviewDto>> GetReviewsPageAsync(Guid productId, string? sort, int skip, int take)
+        public Task<List<ReviewDto>> GetReviewsPageAsync(Guid productId, string? sort, int skip, int take, CancellationToken ct = default)
         {
             var query = BuildReviewDtoQuery(productId);
             query = ApplyReviewSort(query, sort);
@@ -323,7 +324,7 @@ namespace AMZN.Repositories.Products
             return query
                 .Skip(skip)
                 .Take(take)
-                .ToListAsync();
+                .ToListAsync(ct);
         }
 
 

@@ -24,18 +24,18 @@ namespace AMZN.Controllers.Api
 
         [HttpGet("{id:guid}")]
         [AllowAnonymous]
-        public async Task<ActionResult<ProductDetailsDto>> GetById([FromRoute] Guid id)
+        public async Task<ActionResult<ProductDetailsDto>> GetById([FromRoute] Guid id, CancellationToken ct)
         {
-            var dto = await _productService.GetByIdAsync(id);
+            var dto = await _productService.GetByIdAsync(id, ct);
             return Ok(dto);
         }
 
 
         [HttpGet]
         [AllowAnonymous]
-        public async Task<ActionResult<PagedResult<ProductCardDto>>> GetCatalogPage([FromQuery] ProductListQueryDto q)
+        public async Task<ActionResult<PagedResult<ProductCardDto>>> GetCatalogPage([FromQuery] ProductListQueryDto q, CancellationToken ct)
         {
-            var dto = await _productService.GetCatalogPageAsync(q);
+            var dto = await _productService.GetCatalogPageAsync(q, ct);
             return Ok(dto);
         }
 
@@ -43,9 +43,9 @@ namespace AMZN.Controllers.Api
         [HttpGet("brands")]
         [AllowAnonymous]
         [OutputCache(Duration = 30, VaryByQueryKeys = new[] { "categoryId" })]
-        public async Task<ActionResult<List<BrandDto>>> GetCatalogBrands([FromQuery] Guid? categoryId)
+        public async Task<ActionResult<List<BrandDto>>> GetCatalogBrands([FromQuery] Guid? categoryId, CancellationToken ct)
         {
-            var dto = await _productService.GetCatalogBrandsAsync(categoryId);
+            var dto = await _productService.GetCatalogBrandsAsync(categoryId, ct);
             return Ok(dto);
         }
 
@@ -61,9 +61,9 @@ namespace AMZN.Controllers.Api
 
         [HttpGet("{productId:guid}/reviews")]
         [AllowAnonymous]
-        public async Task<ActionResult<PagedResult<ReviewDto>>> GetReviews([FromRoute] Guid productId, [FromQuery] ReviewParamsDto q)
+        public async Task<ActionResult<PagedResult<ReviewDto>>> GetReviews([FromRoute] Guid productId, [FromQuery] ReviewParamsDto q, CancellationToken ct)
         {
-            var dto = await _productService.GetReviewsAsync(productId, q);
+            var dto = await _productService.GetReviewsAsync(productId, q, ct);
             return Ok(dto);
         }
 

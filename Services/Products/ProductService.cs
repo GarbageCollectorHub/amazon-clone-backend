@@ -29,9 +29,9 @@ namespace AMZN.Services.Products
         }
 
 
-        public async Task<ProductDetailsDto> GetByIdAsync(Guid id)
+        public async Task<ProductDetailsDto> GetByIdAsync(Guid id, CancellationToken ct)
         {
-            Product? product = await _productRepository.GetDetailsByIdAsync(id);
+            Product? product = await _productRepository.GetDetailsByIdAsync(id, ct);
 
             if (product == null)
                 throw new ApiException(ErrorCodes.ProductNotFound, "Product not found", StatusCodes.Status404NotFound);
@@ -39,7 +39,7 @@ namespace AMZN.Services.Products
             return product.ToDetailsDto();
         }
 
-        public async Task<PagedResult<ProductCardDto>> GetCatalogPageAsync(ProductListQueryDto q)
+        public async Task<PagedResult<ProductCardDto>> GetCatalogPageAsync(ProductListQueryDto q, CancellationToken ct)
         {
             int skip = (q.Page - 1) * q.PageSize;
             string? normalizedSearch = SearchQueryHelper.NormalizeQuery(q.Search);
@@ -58,10 +58,10 @@ namespace AMZN.Services.Products
             List<Guid>? categoryIds = null;
 
             if (q.CategoryId != null)
-                categoryIds = await _categoryRepository.GetCategoryTreeIdsAsync(q.CategoryId.Value);
+                categoryIds = await _categoryRepository.GetCategoryTreeIdsAsync(q.CategoryId.Value, ct);
 
-            int total = await _productRepository.CountCatalogProductsAsync(queryParams, categoryIds);
-            List<Product> items = await _productRepository.GetCatalogProductsAsync(queryParams, skip, q.PageSize, categoryIds);
+            int total = await _productRepository.CountCatalogProductsAsync(queryParams, categoryIds, ct);
+            List<Product> items = await _productRepository.GetCatalogProductsAsync(queryParams, skip, q.PageSize, categoryIds, ct);
 
             return new PagedResult<ProductCardDto>
             {
@@ -72,14 +72,14 @@ namespace AMZN.Services.Products
             };
         }
 
-        public async Task<List<BrandDto>> GetCatalogBrandsAsync(Guid? categoryId)
+        public async Task<List<BrandDto>> GetCatalogBrandsAsync(Guid? categoryId, CancellationToken ct)
         {
             List<Guid>? categoryIds = null;
 
             if (categoryId != null)
-                categoryIds = await _categoryRepository.GetCategoryTreeIdsAsync(categoryId.Value);
+                categoryIds = await _categoryRepository.GetCategoryTreeIdsAsync(categoryId.Value, ct);
 
-            List<Brand> brands = await _productRepository.GetCatalogBrandsAsync(categoryIds);
+            List<Brand> brands = await _productRepository.GetCatalogBrandsAsync(categoryIds, ct);
 
             return brands.Select(b => b.ToBrandDto()).ToList();
         }
@@ -116,16 +116,16 @@ namespace AMZN.Services.Products
         }
 
         // Review
-        public async Task<PagedResult<ReviewDto>> GetReviewsAsync(Guid productId, ReviewParamsDto q)
+        public async Task<PagedResult<ReviewDto>> GetReviewsAsync(Guid productId, ReviewParamsDto q, CancellationToken ct)
         {
-            bool exists = await _productRepository.ExistsAsync(productId);
+            bool exists = await _productRepository.ExistsAsync(productId, ct);
             if (!exists)
                 throw new ApiException(ErrorCodes.ProductNotFound, "Product not found", StatusCodes.Status404NotFound);
 
             int skip = (q.Page - 1) * q.PageSize;
 
-            int total = await _productRepository.CountReviewsAsync(productId);
-            List<ReviewDto> items = await _productRepository.GetReviewsPageAsync(productId, q.Sort, skip, q.PageSize);
+            int total = await _productRepository.CountReviewsAsync(productId, ct);
+            List<ReviewDto> items = await _productRepository.GetReviewsPageAsync(productId, q.Sort, skip, q.PageSize, ct);
 
             return new PagedResult<ReviewDto>
             {

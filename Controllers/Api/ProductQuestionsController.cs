@@ -22,9 +22,9 @@ namespace AMZN.Controllers.Api
 
         [HttpGet]
         [AllowAnonymous]
-        public async Task<ActionResult<PagedResult<ProductQuestionDto>>> GetQuestions([FromRoute]Guid productId, [FromQuery]ProductQuestionParamsDto q)
+        public async Task<ActionResult<PagedResult<ProductQuestionDto>>> GetQuestions([FromRoute]Guid productId, [FromQuery]ProductQuestionParamsDto q, CancellationToken ct)
         {
-            var dto = await _productQuestionService.GetQuestionsAsync(productId, q);
+            var dto = await _productQuestionService.GetQuestionsAsync(productId, q, ct);
             return Ok(dto);
         }
 
@@ -45,10 +45,11 @@ namespace AMZN.Controllers.Api
         public async Task<ActionResult<PagedResult<ProductQuestionAnswerDto>>> GetAnswers(
             [FromRoute] Guid productId,
             [FromRoute] Guid questionId,
-            [FromQuery] ProductQuestionAnswerParamsDto q
+            [FromQuery] ProductQuestionAnswerParamsDto q,
+            CancellationToken ct
             )
         {
-            var dto = await _productQuestionService.GetAnswersAsync(productId, questionId, q);
+            var dto = await _productQuestionService.GetAnswersAsync(productId, questionId, q, ct);
             return Ok(dto);
         }
 

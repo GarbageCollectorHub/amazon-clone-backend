@@ -44,11 +44,11 @@ public class CategoryRepository : ICategoryRepository
             .ToListAsync();
     }
 
-    public Task<bool> ExistsAsync(Guid id)
+    public Task<bool> ExistsAsync(Guid id, CancellationToken ct = default)
     {
         return _dataContext.Categories
             .AsNoTracking()
-            .AnyAsync(x => x.Id == id);
+            .AnyAsync(x => x.Id == id, ct);
     }
     
     public Category? GetByName(string name)
@@ -56,7 +56,7 @@ public class CategoryRepository : ICategoryRepository
         return _dataContext.Categories.FirstOrDefault(x => x.Name == name);
     }
 
-    public Task<List<CategoryListItemDto>> GetRootAsync()
+    public Task<List<CategoryListItemDto>> GetRootAsync(CancellationToken ct = default)
     {
         return _dataContext.Categories
             .AsNoTracking()
@@ -71,10 +71,10 @@ public class CategoryRepository : ICategoryRepository
                 ImageUrl = x.ImageUrl,
                 HasChildren = _dataContext.Categories.Any(c => c.ParentId == x.Id)
             })
-            .ToListAsync();
+            .ToListAsync(ct);
     }
 
-    public Task<List<CategoryListItemDto>> GetByParentAsync(Guid parentId)
+    public Task<List<CategoryListItemDto>> GetByParentAsync(Guid parentId, CancellationToken ct = default)
     {
         return _dataContext.Categories
             .AsNoTracking()
@@ -89,10 +89,10 @@ public class CategoryRepository : ICategoryRepository
                 ImageUrl = x.ImageUrl,
                 HasChildren = _dataContext.Categories.Any(c => c.ParentId == x.Id)
             })
-            .ToListAsync();
+            .ToListAsync(ct);
     }
 
-    public async Task<List<Guid>> GetCategoryTreeIdsAsync(Guid categoryId)
+    public async Task<List<Guid>> GetCategoryTreeIdsAsync(Guid categoryId, CancellationToken ct = default)
     {
         List<Category> categories = await _dataContext.Categories
             .AsNoTracking()
@@ -101,7 +101,7 @@ public class CategoryRepository : ICategoryRepository
                 Id = x.Id,
                 ParentId = x.ParentId
             })
-            .ToListAsync();
+            .ToListAsync(ct);
 
         Dictionary<Guid, List<Category>> subcategoriesByParentId = categories
             .Where(x => x.ParentId != null)

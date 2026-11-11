@@ -14,15 +14,15 @@ namespace AMZN.Repositories.Home
             _db = db;
         }
 
-        public Task<List<Category>> GetAllCategoriesAsync()
+        public Task<List<Category>> GetAllCategoriesAsync(CancellationToken ct = default)
         {
             return _db.Categories
                 .AsNoTracking()
                 .OrderBy(x => x.Name)
-                .ToListAsync();
+                .ToListAsync(ct);
         }
 
-        public Task<List<CategoryProductCountsDto>> GetCategoryProductCountsAsync(decimal minRating)
+        public Task<List<CategoryProductCountsDto>> GetCategoryProductCountsAsync(decimal minRating, CancellationToken ct = default)
         {
             return _db.Products
                 .AsNoTracking()
@@ -36,10 +36,10 @@ namespace AMZN.Repositories.Home
                     ProductCount = group.Count(),
                     RatingCount = group.Sum(x => x.RatingCount)
                 })
-                .ToListAsync();
+                .ToListAsync(ct);
         }
 
-        public Task<List<Product>> GetTopRatedProductsForCategoriesAsync(List<Guid> categoryIds, decimal minRating, int take)
+        public Task<List<Product>> GetTopRatedProductsForCategoriesAsync(List<Guid> categoryIds, decimal minRating, int take, CancellationToken ct = default)
         {
             if (categoryIds.Count == 0)
                 return Task.FromResult(new List<Product>());
@@ -55,10 +55,10 @@ namespace AMZN.Repositories.Home
                 .ThenByDescending(x => x.CreatedAt)
                 .ThenBy(x => x.Title)
                 .Take(take)
-                .ToListAsync();
+                .ToListAsync(ct);
         }
 
-        public Task<List<Product>> GetTopRatedProductsAsync(decimal minRating, int take)
+        public Task<List<Product>> GetTopRatedProductsAsync(decimal minRating, int take, CancellationToken ct = default)
         {
             return _db.Products
                 .AsNoTracking()
@@ -70,13 +70,14 @@ namespace AMZN.Repositories.Home
                 .ThenByDescending(x => x.CreatedAt)
                 .ThenBy(x => x.Title)
                 .Take(take)
-                .ToListAsync();
+                .ToListAsync(ct);
         }
 
         public Task<List<Product>> GetTopRatedProductsUnderPriceAsync(
             decimal maxPrice,
             decimal minRating,
-            int take)
+            int take,
+            CancellationToken ct = default)
         {
             return _db.Products
                 .AsNoTracking()
@@ -89,10 +90,10 @@ namespace AMZN.Repositories.Home
                 .ThenByDescending(x => x.CreatedAt)
                 .ThenBy(x => x.Title)
                 .Take(take)
-                .ToListAsync();
+                .ToListAsync(ct);
         }
 
-        public Task<List<Product>> GetProductsByIdsAsync(List<Guid> productIds)
+        public Task<List<Product>> GetProductsByIdsAsync(List<Guid> productIds, CancellationToken ct = default)
         {
             if (productIds.Count == 0)
                 return Task.FromResult(new List<Product>());
@@ -100,7 +101,7 @@ namespace AMZN.Repositories.Home
             return _db.Products
                 .AsNoTracking()
                 .Where(x => productIds.Contains(x.Id) && x.StockQuantity > 0)
-                .ToListAsync();
+                .ToListAsync(ct);
         }
     }
 }

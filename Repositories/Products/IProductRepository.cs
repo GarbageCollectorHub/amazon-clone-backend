@@ -17,9 +17,9 @@ namespace AMZN.Repositories.Products
 
         Task<Product?> GetByIdAsync(Guid id);
         Task<Product?> GetByIdWithImagesAsync(Guid id);
-        Task<Product?> GetDetailsByIdAsync(Guid id);
+        Task<Product?> GetDetailsByIdAsync(Guid id, CancellationToken ct = default);
 
-        Task<bool> ExistsAsync(Guid id);
+        Task<bool> ExistsAsync(Guid id, CancellationToken ct = default);
         Task<bool> TitleExistsAsync(string title);
 
         // MyProduct View
@@ -28,9 +28,9 @@ namespace AMZN.Repositories.Products
         void AddProductImages(IEnumerable<ProductImage> productImages);
 
         // Catalog Page
-        Task<int> CountCatalogProductsAsync(ProductListQueryParams queryParams, List<Guid>? categoryIds);
-        Task<List<Product>> GetCatalogProductsAsync(ProductListQueryParams queryParams,int skip, int take, List<Guid>? categoryIds);
-        Task<List<Brand>> GetCatalogBrandsAsync(List<Guid>? categoryIds);
+        Task<int> CountCatalogProductsAsync(ProductListQueryParams queryParams, List<Guid>? categoryIds, CancellationToken ct = default);
+        Task<List<Product>> GetCatalogProductsAsync(ProductListQueryParams queryParams,int skip, int take, List<Guid>? categoryIds, CancellationToken ct = default);
+        Task<List<Brand>> GetCatalogBrandsAsync(List<Guid>? categoryIds, CancellationToken ct = default);
 
         // Product Rating
         Task<ProductRating?> GetUserRatingAsync(Guid productId, Guid userId);
@@ -39,8 +39,8 @@ namespace AMZN.Repositories.Products
         Task<(int ratingSum, int ratingCount)> UpdateProductRatingAsync(Guid productId);
 
         // Product Reviews
-        Task<int> CountReviewsAsync(Guid productId);
-        Task<List<ReviewDto>> GetReviewsPageAsync(Guid productId, string? sort, int skip, int take);
+        Task<int> CountReviewsAsync(Guid productId, CancellationToken ct = default);
+        Task<List<ReviewDto>> GetReviewsPageAsync(Guid productId, string? sort, int skip, int take, CancellationToken ct = default);
         Task<ProductReview?> GetUserReviewAsync(Guid productId, Guid userId);
         Task<ReviewDto?> GetUserReviewDtoAsync(Guid productId, Guid userId);
         void AddReview(ProductReview review);

@@ -21,9 +21,9 @@ namespace AMZN.Controllers.Api
 
         [HttpGet("suggestions")]
         [AllowAnonymous]
-        public async Task<ActionResult<SearchSuggestionsResponseDto>> GetSuggestions([FromQuery(Name = "q"), StringLength(100)] string? query)
+        public async Task<ActionResult<SearchSuggestionsResponseDto>> GetSuggestions([FromQuery(Name = "q"), StringLength(100)] string? query, CancellationToken ct)
         {
-            var dto = await _searchService.GetSuggestionsAsync(query);
+            var dto = await _searchService.GetSuggestionsAsync(query, ct);
             return Ok(dto);
         }
     }

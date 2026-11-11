@@ -25,6 +25,14 @@ namespace AMZN.Middleware
             {
                 await _next(context);
             }
+            catch (OperationCanceledException) when (IsApiRequest(context) && context.RequestAborted.IsCancellationRequested)
+            {
+                // Клиент уже отключился. Не пишем тело ответа и не логируем это как ошибку сервера.
+                if (!context.Response.HasStarted)
+                {
+                    context.Response.StatusCode = StatusCodes.Status499ClientClosedRequest;
+                }
+            }
             catch (Exception ex) when (IsApiRequest(context))
             {
                 await HandleApiException(context, ex);
