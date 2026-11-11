@@ -1,6 +1,6 @@
 # Database schema
 
-An EER diagram of the SQL Server database, schema `AMZN`, created in MySQL Workbench from read-only SQL Server catalog metadata. It includes all 20 application tables, 125 columns and 27 foreign keys. EF Core's internal migration-history table is omitted.
+This diagram is a snapshot of the SQL Server schema `AMZN` before `ImageUploadUsage` was added for the monthly image upload quota. The snapshot has 20 application tables, 125 columns and 27 foreign keys. EF Core's migration-history table is not shown.
 
 The layout follows the application's main areas: catalog and promotions on the left, ratings and Q&A in the center, accounts and orders on the right.
 

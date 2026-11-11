@@ -14,24 +14,17 @@ The backend is hosted on Azure App Service with Azure SQL Database and Azure Blo
 
 The first request may take longer after a period of inactivity. Use test data when trying the demo.
 
-## My contribution
+## My role
 
-My main areas of responsibility were the backend API, data access and MVC product management.
+I worked on the core backend in the original team project and continued maintaining it afterward. My main areas were the catalog, search and homepage APIs, product ratings, reviews and Q&A, and JWT authentication.
 
-- Built the main API layers using controllers, services, repositories and EF Core, with shared DTOs and centralized error handling.
-- Developed the catalog API with category, brand, price and rating filters, pagination and multiple sorting options. Category selection includes subcategories and updates the available brand filters.
-- Implemented catalog search and search suggestions for products, categories and brands, with more exact matches shown first.
-- Built homepage APIs for product and category sections, including popular products and recently viewed items.
-- Implemented JWT authentication with access and refresh tokens, BCrypt password hashing and rate limiting for authentication endpoints.
-- Added product ratings, reviews and Q&A, with database transactions to protect concurrent rating and review updates.
-- Built MVC product and brand management, image galleries and Azure Blob Storage integration, with reusable server-side image validation.
-- Refactored homepage queries to apply filtering, grouping and limits in the database, and updated storage operations to use async calls.
+I also built the MVC product editor and integrated Azure Blob Storage for product images. Later, I improved database queries, shared validation rules and upload safeguards, and added automated tests.
 
 ## Project preview
 
 ### React storefront (client application)
 
-The React storefront was built by the frontend team and has its own repository. These screenshots show it running locally with the deployed AMZN API and demo data from Azure SQL Database.
+The React storefront was built by the frontend team and has its own repository. These screenshots show it running locally against the AMZN API with demo data.
 
 **Homepage overview** with three main categories, four product groups, popular items and the under-$20 collection.
 
@@ -78,9 +71,23 @@ Click any preview to open the full-size screenshot.
       <a href="docs/images/storefront-collections.png">Open full-size screenshot</a>
     </td>
   </tr>
+  <tr>
+    <th width="50%">Customer reviews</th>
+    <th width="50%">Product questions and answers</th>
+  </tr>
+  <tr>
+    <td valign="top">
+      <a href="docs/images/storefront-reviews.png"><img src="docs/images/storefront-reviews.png" alt="Customer reviews with author names, ratings and dates" width="420"></a><br>
+      Ratings and reviews from the API.<br>
+      <a href="docs/images/storefront-reviews.png">Open full-size screenshot</a>
+    </td>
+    <td valign="top">
+      <a href="docs/images/storefront-questions.jpg"><img src="docs/images/storefront-questions.jpg" alt="Two product questions with dated answers and a Seller label" width="420"></a><br>
+      Up to three answers per question, with more available on demand.<br>
+      <a href="docs/images/storefront-questions.jpg">Open full-size screenshot</a>
+    </td>
+  </tr>
 </table>
-
-**[View customer reviews](docs/images/storefront-reviews.png)** with author names, ratings and dates from the API. The catalog and reviews shown here use demo data.
 
 ### MVC admin panel (this repository)
 
@@ -205,7 +212,7 @@ Adding delivery addresses and payment methods uses transactions and per-user loc
 
 ### Database diagram
 
-The SQL Server schema includes 20 application tables and 27 foreign-key relationships. Click the diagram to view it at full size.
+The diagram shows the SQL Server schema before the image upload usage table was added. Click it to view it at full size.
 
 <a href="docs/images/database-schema.png">
   <img src="docs/images/database-schema.png" alt="SQL Server database tables, columns and relationships" width="1000">
@@ -257,9 +264,9 @@ Run the tests from the project root:
 dotnet test AMZN.sln
 ```
 
-The tests cover image file rules, upload checks, forwarded headers and request limits for authentication and catalog changes. HTTP tests also check shared counters, 429 responses and the 25 MiB request limit.
+The tests cover image validation, shared limits across request models and EF Core, JWT handling, forwarded headers and request limits. HTTP tests also check shared counters, 429 responses and the 25 MiB request limit.
 
-Some HTTP tests start a local server to check the total request size. The default test run needs no SQL Server, Azure or secret settings. To run the optional quota tests on Windows, install SQL Server LocalDB and set `AMZN_TEST_LOCALDB=1` before running the tests. They use temporary databases, not the application database.
+Some HTTP tests start a local server to check the total request size. The default test run needs no SQL Server, Azure or secret settings. To test the monthly upload quota on Windows, install SQL Server LocalDB and set `AMZN_TEST_LOCALDB=1` before running the tests. These tests use temporary databases, not the application database.
 
 See [deployment checks](docs/deployment-checks.md) for the manual IP and rate-limit check after publishing.
 
