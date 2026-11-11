@@ -1,4 +1,5 @@
 ﻿using AMZN.Data.Entities;
+using AMZN.DTOs.Common;
 using AMZN.DTOs.Products;
 using AMZN.DTOs.Products.Reviews;
 using AMZN.Repositories.Products.Queries;
@@ -23,7 +24,7 @@ namespace AMZN.Repositories.Products
         Task<bool> TitleExistsAsync(string title);
 
         // MyProduct View
-        Task<List<Product>> GetSellerProductsAsync(Guid sellerId);
+        Task<PagedResult<Product>> GetSellerProductsAsync(Guid sellerId, string search, string sort, int page, int pageSize, CancellationToken ct);
         void RemoveProductImages(IEnumerable<ProductImage> productImages);
         void AddProductImages(IEnumerable<ProductImage> productImages);
 
@@ -44,7 +45,7 @@ namespace AMZN.Repositories.Products
         Task<ProductReview?> GetUserReviewAsync(Guid productId, Guid userId);
         Task<ReviewDto?> GetUserReviewDtoAsync(Guid productId, Guid userId);
         void AddReview(ProductReview review);
-        void PurchaseProduct(Guid productId, int quantity);
+        Task<List<Product>> GetProductsForUpdateAsync(Guid[] productIds);
 
     }
 

@@ -6,6 +6,7 @@ using AMZN.Repositories.Products;
 using AMZN.Repositories.Users;
 using AMZN.Shared.Exceptions;
 using AMZN.Shared.Exceptions.Errors;
+using AMZN.Shared.Transactions;
 
 namespace AMZN.Services.Orders;
 
@@ -15,25 +16,32 @@ public class OrderService
     private readonly ICartRepository _cartRepository;
     private readonly IProductRepository _productRepository;
     private readonly IUserRepository _userRepository;
+    private readonly ITransactionManager _transactionManager;
 
     public OrderService(IOrderRepository orderRepository,
         ICartRepository cartRepository,
         IProductRepository productRepository,
-        IUserRepository userRepository)
+        IUserRepository userRepository,
+        ITransactionManager transactionManager)
     {
         _orderRepository = orderRepository;
         _cartRepository = cartRepository;
         _productRepository = productRepository;
         _userRepository = userRepository;
+        _transactionManager = transactionManager;
     }
 
-    public async Task<OrderDto> CreateOrderAsync(Guid userId)
+    public Task<OrderDto> CreateOrderAsync(Guid userId)
     {
-        var user = await _userRepository.GetUserByIdAsync(userId);
-        if (user == null)
+        return _transactionManager.ExecuteAsync(() =>
         {
-            throw new ApiException(ErrorCodes.UserNotFound, "User not found", StatusCodes.Status404NotFound);
-        }
+            return CreateOrderCoreAsync(userId);
+        });
+    }
+
+    private async Task<OrderDto> CreateOrderCoreAsync(Guid userId)
+    {
+        var user = await LockUserForOrderChangeAsync(userId);
 
         var addresses = await _userRepository.GetUserDeliveryAddressesAsync(user);
         if (addresses == null)
@@ -55,19 +63,14 @@ public class OrderService
             throw new ApiException(ErrorCodes.PendingOrderExists, "Pending order exists", StatusCodes.Status409Conflict);
         }
         
-        int quantity = 0;
-        decimal totalPrice = 0;
-        foreach (var ci in cart.Items)
+        int quantity = cart.Items.Sum(item =>
         {
-            var product = await _productRepository.GetByIdAsync(ci.ProductId);
-            if (product == null)
-            {
-                throw new ApiException(ErrorCodes.ProductNotFound, "Product not found", StatusCodes.Status404NotFound);
-            }
-            
-            quantity += ci.Quantity;
-            totalPrice += product.CurrentPrice * ci.Quantity;
-        }
+            return item.Quantity;
+        });
+        decimal totalPrice = cart.Items.Sum(item =>
+        {
+            return item.Product.CurrentPrice * item.Quantity;
+        });
 
         if (quantity == 0)
         {
@@ -82,25 +85,9 @@ public class OrderService
             Status = OrderStatus.Pending,
             CreatedAt = DateTime.Now,
             User = user,
-            OrderItems = new List<OrderItem>()
         };
+        order.OrderItems = BuildOrderItems(cart, order);
         await _orderRepository.AddOrderAsync(order);
-        foreach (var ci in cart.Items)
-        {
-            OrderItem item = new()
-            {
-                Id = Guid.NewGuid(),
-                OrderId = order.Id,
-                ProductId = ci.ProductId,
-                Brand = ci.Product.Brand.Name,
-                ProductTitle = ci.Product.Title,
-                ProductImage = ci.Product.PrimaryImageUrl,
-                Quantity = ci.Quantity,
-                UnitPrice = ci.Product.CurrentPrice,
-                Order = order
-            };
-            await _orderRepository.AddOrderItemAsync(item);
-        }
 
         return new OrderDto()
         {
@@ -108,18 +95,22 @@ public class OrderService
             TotalQuantity = quantity,
             TotalAmount = totalPrice,
             Status = order.Status,
-            DeliveryAddresses = addresses.ToList(),
-            PaymentMethods = paymentMethods.ToList()
+            DeliveryAddresses = addresses,
+            PaymentMethods = paymentMethods
         };
     }
 
-    public async Task<OrderDto> UpdateOrderAsync(Guid userId)
+    public Task<OrderDto> UpdateOrderAsync(Guid userId)
     {
-        var user = await _userRepository.GetUserByIdAsync(userId);
-        if (user == null)
+        return _transactionManager.ExecuteAsync(() =>
         {
-            throw new ApiException(ErrorCodes.UserNotFound, "User not found", StatusCodes.Status404NotFound);
-        }
+            return UpdateOrderCoreAsync(userId);
+        });
+    }
+
+    private async Task<OrderDto> UpdateOrderCoreAsync(Guid userId)
+    {
+        var user = await LockUserForOrderChangeAsync(userId);
 
         var addresses = await _userRepository.GetUserDeliveryAddressesAsync(user);
         if (addresses == null)
@@ -141,47 +132,24 @@ public class OrderService
             throw new ApiException(ErrorCodes.OrderNotFound, "Order not found", StatusCodes.Status404NotFound);
         }
         
-        int quantity = 0;
-        decimal totalPrice = 0;
-        foreach (var ci in cart.Items)
+        int quantity = cart.Items.Sum(item =>
         {
-            var product = await _productRepository.GetByIdAsync(ci.ProductId);
-            if (product == null)
-            {
-                throw new ApiException(ErrorCodes.ProductNotFound, "Product not found", StatusCodes.Status404NotFound);
-            }
-            
-            quantity += ci.Quantity;
-            totalPrice += product.CurrentPrice * ci.Quantity;
-        }
+            return item.Quantity;
+        });
+        decimal totalPrice = cart.Items.Sum(item =>
+        {
+            return item.Product.CurrentPrice * item.Quantity;
+        });
 
         if (quantity == 0)
         {
             throw new ApiException(ErrorCodes.CartNotFound, "Cart is empty", StatusCodes.Status404NotFound);
         }
 
-        await _orderRepository.RemoveOrderItemsAsync(order);
+        _orderRepository.ReplaceOrderItems(order, BuildOrderItems(cart, order));
         order.TotalAmount = totalPrice;
         order.UpdatedAt = DateTime.Now;
-        order.OrderItems = new List<OrderItem>();
-        foreach (var ci in cart.Items)
-        {
-            OrderItem item = new()
-            {
-                Id = Guid.NewGuid(),
-                OrderId = order.Id,
-                ProductId = ci.ProductId,
-                Brand = ci.Product.Brand.Name,
-                ProductTitle = ci.Product.Title,
-                ProductImage = ci.Product.PrimaryImageUrl,
-                Quantity = ci.Quantity,
-                UnitPrice = ci.Product.CurrentPrice,
-                Order = order
-            };
-            await _orderRepository.AddOrderItemAsync(item);
-        }
-
-        await _orderRepository.UpdateOrderAsync(order);
+        await _orderRepository.SaveChangesAsync();
         
         return new OrderDto()
         {
@@ -189,31 +157,33 @@ public class OrderService
             TotalQuantity = quantity,
             TotalAmount = totalPrice,
             Status = order.Status,
-            DeliveryAddresses = addresses.ToList(),
-            PaymentMethods = paymentMethods.ToList()
+            DeliveryAddresses = addresses,
+            PaymentMethods = paymentMethods
         };
     }
 
-    public async Task<CompletedOrderDto> CompleteOrderAsync(Guid userId, 
+    public Task<CompletedOrderDto> CompleteOrderAsync(Guid userId, Guid paymentMethodId, Guid deliveryAddressId)
+    {
+        return _transactionManager.ExecuteAsync(() =>
+        {
+            return CompleteOrderCoreAsync(userId, paymentMethodId, deliveryAddressId);
+        });
+    }
+
+    private async Task<CompletedOrderDto> CompleteOrderCoreAsync(Guid userId,
         Guid paymentMethodId, 
         Guid deliveryAddressId)
     {
-        var user = await _userRepository.GetUserByIdAsync(userId);
-        if (user == null)
-        {
-            throw new ApiException(ErrorCodes.UserNotFound, "User not found", StatusCodes.Status404NotFound);
-        }
+        await LockUserForOrderChangeAsync(userId);
         
-        var addresses = await _userRepository.GetUserDeliveryAddressesAsync(user);
-        var address = await _userRepository.GetDeliveryAddressByIdAsync(deliveryAddressId);
-        if (address == null || !addresses.Contains(address) || addresses == null)
+        var address = await _userRepository.GetDeliveryAddressByIdAsync(userId, deliveryAddressId);
+        if (address == null)
         {
             throw new ApiException(ErrorCodes.UserNotFound, "Delivery address not found", StatusCodes.Status404NotFound);
         }
         
-        var paymentMethods = await _userRepository.GetUserPaymentMethodsAsync(user);
-        var paymentMethod = await _userRepository.GetPaymentMethodByIdAsync(paymentMethodId);
-        if (paymentMethods == null || paymentMethod == null || !paymentMethods.Contains(paymentMethod))
+        var paymentMethod = await _userRepository.GetPaymentMethodByIdAsync(userId, paymentMethodId);
+        if (paymentMethod == null)
         {
             throw new ApiException(ErrorCodes.UserNotFound, "Payment method not found", StatusCodes.Status404NotFound);
         }
@@ -224,17 +194,27 @@ public class OrderService
                 StatusCodes.Status406NotAcceptable);
         }
         
-        var cart = await ValidateCartAsync(userId);
-        var order = await _orderRepository.GetPendingOrderByUserIdAsync(user.Id);
+        var cart = await ValidateCartAsync(userId, includeItems: false);
+        var order = await _orderRepository.GetPendingOrderByUserIdAsync(userId);
         if (order == null)
         {
             throw new ApiException(ErrorCodes.OrderNotFound, "Order not found", StatusCodes.Status404NotFound);
         }
 
+        var productIds = order.OrderItems.Select(item =>
+        {
+            return item.ProductId;
+        }).Distinct().ToArray();
+        // Читаем остатки под блокировкой, чтобы параллельный заказ не списал те же единицы.
+        // Поэтому выше загрузили корзину без товаров: в контексте не должно быть старых остатков.
+        var products = await _productRepository.GetProductsForUpdateAsync(productIds);
+        var productsById = products.ToDictionary(product =>
+        {
+            return product.Id;
+        });
         foreach (var item in order.OrderItems)
         {
-            var product = await _productRepository.GetByIdAsync(item.ProductId);
-            if (product == null)
+            if (!productsById.TryGetValue(item.ProductId, out var product))
             {
                 throw new ApiException(ErrorCodes.ProductNotFound, "Product not found", StatusCodes.Status404NotFound);
             }
@@ -244,8 +224,7 @@ public class OrderService
                 throw new ApiException(ErrorCodes.ProductOutOfStock, "Product is out of stock", StatusCodes.Status409Conflict);
             }
             
-            _productRepository.PurchaseProduct(product.Id, item.Quantity);
-            _productRepository.Update(product);
+            product.StockQuantity -= item.Quantity;
         }
 
         await _cartRepository.ClearCartAsync(cart.Id);
@@ -254,7 +233,7 @@ public class OrderService
         order.ConfirmedAt = DateTime.Now;
         order.DeliveryAddress = address;
         order.PaymentMethod = paymentMethod;
-        await _orderRepository.UpdateOrderAsync(order);
+        await _orderRepository.SaveChangesAsync();
         return new CompletedOrderDto()
         {
             OrderId = order.Id,
@@ -266,16 +245,20 @@ public class OrderService
         };
     }
 
-    public async Task<CompletedOrderDto> CancelOrderAsync(Guid userId)
+    public Task<CompletedOrderDto> CancelOrderAsync(Guid userId)
     {
-        var user = await _userRepository.GetUserByIdAsync(userId);
-        if (user == null)
+        return _transactionManager.ExecuteAsync(() =>
         {
-            throw new ApiException(ErrorCodes.UserNotFound, "User not found", StatusCodes.Status404NotFound);
-        }
+            return CancelOrderCoreAsync(userId);
+        });
+    }
+
+    private async Task<CompletedOrderDto> CancelOrderCoreAsync(Guid userId)
+    {
+        await LockUserForOrderChangeAsync(userId);
         
-        var cart = await ValidateCartAsync(userId);
-        var order = await _orderRepository.GetPendingOrderByUserIdAsync(user.Id);
+        var cart = await ValidateCartAsync(userId, includeItems: false);
+        var order = await _orderRepository.GetPendingOrderByUserIdAsync(userId);
         if (order == null)
         {
             throw new ApiException(ErrorCodes.OrderNotFound, "Order not found", StatusCodes.Status404NotFound);
@@ -284,7 +267,7 @@ public class OrderService
         await _cartRepository.ClearCartAsync(cart.Id);
         order.Status = OrderStatus.Cancelled;
         order.CanceledAt = DateTime.Now;
-        await _orderRepository.UpdateOrderAsync(order);
+        await _orderRepository.SaveChangesAsync();
 
         return new CompletedOrderDto()
         {
@@ -328,15 +311,44 @@ public class OrderService
         return completedOrders;   
     }
     
-    private async Task<Cart> ValidateCartAsync(Guid userId)
+    private async Task<User> LockUserForOrderChangeAsync(Guid userId)
     {
-        var cart = await _cartRepository.GetCartByUserIdAsync(userId);
+        // Пока открыта транзакция, другой запрос этого пользователя не изменит тот же черновик.
+        return await _userRepository.GetByIdForUpdateAsync(userId)
+            ?? throw new ApiException(ErrorCodes.UserNotFound, "User not found", StatusCodes.Status404NotFound);
+    }
+
+    private static List<OrderItem> BuildOrderItems(Cart cart, Order order)
+    {
+        return cart.Items.Select(item =>
+        {
+            return new OrderItem
+            {
+                Id = Guid.NewGuid(),
+                OrderId = order.Id,
+                ProductId = item.ProductId,
+                Brand = item.Product.Brand.Name,
+                ProductTitle = item.Product.Title,
+                ProductImage = item.Product.PrimaryImageUrl,
+                Quantity = item.Quantity,
+                UnitPrice = item.Product.CurrentPrice,
+                Order = order
+            };
+        }).ToList();
+    }
+
+    private async Task<Cart> ValidateCartAsync(Guid userId, bool includeItems = true)
+    {
+        var cart = await _cartRepository.GetCartByUserIdAsync(userId, includeItems);
         if (cart == null)
         {
             throw new ApiException(ErrorCodes.CartNotFound, "Cart not found", StatusCodes.Status404NotFound);
         }
 
-        if (await _cartRepository.IsCartEmptyAsync(cart.Id))
+        bool isEmpty = includeItems
+            ? cart.Items.Count == 0
+            : await _cartRepository.IsCartEmptyAsync(cart.Id);
+        if (isEmpty)
         {
             throw new ApiException(ErrorCodes.ProductNotFound, "Cart is empty", StatusCodes.Status404NotFound);
         }

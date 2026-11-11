@@ -1,4 +1,5 @@
 @using AMZN.Models.Product
+@using AMZN.Shared.Limits
 @using System.Globalization
 @model MyProductsListViewModel
 @{
@@ -24,7 +25,7 @@
     {
         <div class="alert-box alert-box--danger" role="alert">@errorMessage</div>
     }
-    @if (Model.Products.Count == 0)
+    @if (Model.TotalItems == 0 && Model.Search.Length == 0)
     {
         <div class="empty-state">
             <h2 class="empty-state__title">No products yet</h2>
@@ -36,23 +37,35 @@
     }
     else
     {
-        <div class="products-toolbar">
+        <form asp-action="Index" method="get" class="products-toolbar" role="search">
             <div class="products-search">
                 <svg class="icon" aria-hidden="true"><use href="#i-search" /></svg>
                 <label for="product-search" class="visually-hidden">Search products</label>
-                <input id="product-search" class="form-control" type="search" placeholder="Search products..." autocomplete="off" />
+                <input id="product-search" name="search" value="@Model.Search" maxlength="@CatalogLimits.SearchMaxLength"
+                       class="form-control" type="search" placeholder="Search products..." autocomplete="off" />
             </div>
             <div class="products-sort">
                 <label for="product-sort" class="visually-hidden">Sort products</label>
-                <select id="product-sort" class="form-select">
-                    <option value="newest">Newest first</option>
-                    <option value="oldest">Oldest first</option>
-                    <option value="title">Title: A to Z</option>
-                    <option value="price-asc">Price: low to high</option>
-                    <option value="price-desc">Price: high to low</option>
+                <select id="product-sort" name="sort" class="form-select">
+                    <option value="newest" selected="@(Model.Sort == "newest")">Newest first</option>
+                    <option value="oldest" selected="@(Model.Sort == "oldest")">Oldest first</option>
+                    <option value="title" selected="@(Model.Sort == "title")">Title: A to Z</option>
+                    <option value="price-asc" selected="@(Model.Sort == "price-asc")">Price: low to high</option>
+                    <option value="price-desc" selected="@(Model.Sort == "price-desc")">Price: high to low</option>
                 </select>
             </div>
-        </div>
+            <button type="submit" class="action-button action-button--secondary">Apply</button>
+        </form>
+        @if (Model.Products.Count == 0)
+        {
+            <div class="products-no-results">
+                <h2>No matching products</h2>
+                <p>Try a different search.</p>
+                <a asp-action="Index" asp-route-sort="@Model.Sort" class="action-button action-button--secondary">Clear search</a>
+            </div>
+        }
+        else
+        {
         <p class="products-scroll-hint">Swipe the table to see prices, stock and actions.</p>
         <div class="table-card">
             <div class="table-wrap" tabindex="0" role="region" aria-label="Product list, scroll horizontally on smaller screens">
@@ -66,10 +79,10 @@
                             <th scope="col">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="js-products-rows">
+                    <tbody>
                         @foreach (var product in Model.Products)
                         {
-                            <tr class="js-product-row" data-title="@product.Title" data-price="@product.CurrentPrice.ToString(CultureInfo.InvariantCulture)" data-created="@product.CreatedAt.Ticks">
+                            <tr>
                                 <td>
                                     <div class="product-cell">
                                         <img src="@product.PrimaryImageUrl" alt="" class="products-thumbnail" loading="lazy" />
@@ -96,14 +109,28 @@
                         }
                     </tbody>
                 </table>
-                <div class="products-no-results" id="product-no-results" hidden>
-                    <h2>No matching products</h2>
-                    <p>Try a different search.</p>
-                    <button type="button" class="action-button action-button--secondary" id="clear-product-search">Clear search</button>
-                </div>
             </div>
         </div>
-        <p class="products-count" id="product-count" role="status" aria-live="polite">@Model.Products.Count @(Model.Products.Count == 1 ? "product" : "products")</p>
+        <div class="products-toolbar products-pagination">
+            <p class="products-count">@Model.TotalItems @(Model.TotalItems == 1 ? "product" : "products")</p>
+            @if (Model.TotalPages > 1)
+            {
+                <nav class="inline-actions" aria-label="Product pages">
+                    @if (Model.Page > 1)
+                    {
+                        <a asp-action="Index" asp-route-search="@Model.Search" asp-route-sort="@Model.Sort"
+                           asp-route-page="@(Model.Page - 1)" class="action-button action-button--secondary">Previous</a>
+                    }
+                    <span>Page @Model.Page of @Model.TotalPages</span>
+                    @if (Model.Page < Model.TotalPages)
+                    {
+                        <a asp-action="Index" asp-route-search="@Model.Search" asp-route-sort="@Model.Sort"
+                           asp-route-page="@(Model.Page + 1)" class="action-button action-button--secondary">Next</a>
+                    }
+                </nav>
+            }
+        </div>
+        }
     }
 </div>
 <partial name="_DeleteConfirmModal" />

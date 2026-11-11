@@ -33,8 +33,8 @@ namespace AMZN.Repositories.Users
         
         void SetDefaultDeliveryAddress(DeliveryAddress address, User user);
         
-        Task<DeliveryAddress?> GetDeliveryAddressByIdAsync(Guid id);
+        Task<DeliveryAddress?> GetDeliveryAddressByIdAsync(Guid userId, Guid id);
         
-        Task<PaymentMethod?> GetPaymentMethodByIdAsync(Guid id);
+        Task<PaymentMethod?> GetPaymentMethodByIdAsync(Guid userId, Guid id);
     }
 }

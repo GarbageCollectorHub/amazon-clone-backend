@@ -22,13 +22,14 @@ namespace AMZN.Controllers
 
         [HttpGet("")]
         [Authorize]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? search, string? sort, int page, CancellationToken ct)
         {
             Guid? sellerId = User.GetUserIdOrNull();
             if (sellerId == null)
                 return Forbid();
 
-            MyProductsListViewModel vm = await _adminProductService.BuildMyProductsListVmAsync(sellerId.Value);
+            MyProductsListViewModel vm = await _adminProductService.BuildMyProductsListVmAsync(
+                sellerId.Value, search, sort, page, ct);
             return View(vm);
         }
 

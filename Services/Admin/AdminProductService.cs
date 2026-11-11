@@ -128,20 +128,34 @@ namespace AMZN.Services.Admin
         }
 
 
-        public async Task<MyProductsListViewModel> BuildMyProductsListVmAsync(Guid sellerId)
+        public async Task<MyProductsListViewModel> BuildMyProductsListVmAsync(
+            Guid sellerId, string? search, string? sort, int page, CancellationToken ct)
         {
-            List<Product> sellerProducts = await _products.GetSellerProductsAsync(sellerId);
+            const int pageSize = 20;
+            search = search?.Trim() ?? "";
+            if (search.Length > CatalogLimits.SearchMaxLength)
+                search = search[..CatalogLimits.SearchMaxLength];
+            sort = sort is "oldest" or "title" or "price-asc" or "price-desc" ? sort : "newest";
+            var sellerProducts = await _products.GetSellerProductsAsync(sellerId, search, sort, page, pageSize, ct);
 
             return new MyProductsListViewModel
             {
-                Products = sellerProducts.Select(product => new MyProductsListItemViewModel
+                Search = search,
+                Sort = sort,
+                Page = sellerProducts.Page,
+                TotalPages = sellerProducts.TotalPages,
+                TotalItems = sellerProducts.TotalItems,
+                Products = sellerProducts.Items.Select(product =>
                 {
-                    Id = product.Id,
-                    Title = product.Title,
-                    CurrentPrice = product.CurrentPrice,
-                    StockQuantity = product.StockQuantity,
-                    PrimaryImageUrl = product.PrimaryImageUrl,
-                    CreatedAt = product.CreatedAt
+                    return new MyProductsListItemViewModel
+                    {
+                        Id = product.Id,
+                        Title = product.Title,
+                        CurrentPrice = product.CurrentPrice,
+                        StockQuantity = product.StockQuantity,
+                        PrimaryImageUrl = product.PrimaryImageUrl,
+                        CreatedAt = product.CreatedAt
+                    };
                 }).ToList()
             };
         }

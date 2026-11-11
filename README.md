@@ -266,7 +266,7 @@ dotnet test AMZN.sln
 
 The tests cover image validation, shared limits across request models and EF Core, JWT handling, forwarded headers and request limits. HTTP tests also check shared counters, 429 responses and the 25 MiB request limit.
 
-Some HTTP tests start a local server to check the total request size. The default test run needs no SQL Server, Azure or secret settings. To test the monthly upload quota on Windows, install SQL Server LocalDB and set `AMZN_TEST_LOCALDB=1` before running the tests. These tests use temporary databases, not the application database.
+Some HTTP tests start a local server to check the total request size. The default test run needs no SQL Server, Azure or secret settings. To run the SQL tests for the upload quota, pagination, checkout and promotions on Windows, install SQL Server LocalDB and set `AMZN_TEST_LOCALDB=1`. These tests use temporary databases, not the application database.
 
 See [deployment checks](docs/deployment-checks.md) for the manual IP and rate-limit check after publishing.
 

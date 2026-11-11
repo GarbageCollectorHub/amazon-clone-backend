@@ -29,13 +29,13 @@ public class CartRepository : ICartRepository
         return await _dataContext.Carts.AnyAsync(c => c.Id == cartId);
     }
     
-    public async Task<Cart?> GetCartByUserIdAsync(Guid userId)
+    public Task<Cart?> GetCartByUserIdAsync(Guid userId, bool includeItems = true)
     {
-        return await _dataContext.Carts
-            .Include(c => c.Items)
-            .ThenInclude(p => p.Product)
-            .ThenInclude(p => p.Brand)
-            .FirstOrDefaultAsync(c => c.UserId == userId);
+        IQueryable<Cart> query = _dataContext.Carts;
+        if (includeItems)
+            query = query.Include(c => c.Items).ThenInclude(i => i.Product).ThenInclude(p => p.Brand);
+
+        return query.FirstOrDefaultAsync(c => c.UserId == userId);
     }
     
     public async Task<bool> IsCartEmptyAsync(Guid cartId)
@@ -43,34 +43,16 @@ public class CartRepository : ICartRepository
         return !(await _dataContext.CartItems.AnyAsync(ci => ci.CartId == cartId));
     }
     
-    public async Task UpdateCartAsync(Cart cart)
-    {
-        _dataContext.Carts.Update(cart);
-        await _dataContext.SaveChangesAsync();
-    }
-
     public async Task AddCartItemAsync(CartItem cartItem)
     {
+        // EF добавит позицию в cart.Items через связь с уже загруженной корзиной.
         await _dataContext.CartItems.AddAsync(cartItem);
-        Cart? cart = await _dataContext.Carts
-            .Include(c => c.Items)
-            .ThenInclude(p => p.Product)
-            .FirstOrDefaultAsync(c => c.Id == cartItem.CartId);
-        if (cart == null) return;
-        cart.Items.Add(cartItem);
-        _dataContext.Carts.Update(cart);
         await _dataContext.SaveChangesAsync();
     }
     
     public async Task RemoveCartItemAsync(CartItem cartItem)
     {
-        var cart = await _dataContext.Carts
-            .Include(c => c.Items)
-            .ThenInclude(p => p.Product)
-            .FirstOrDefaultAsync(c => c.Id == cartItem.CartId);
-        if (cart == null) return;
-        cart.Items.Remove(cartItem);
-        _dataContext.Carts.Update(cart);
+        cartItem.Cart.Items.Remove(cartItem);
         _dataContext.CartItems.Remove(cartItem);
         await _dataContext.SaveChangesAsync();
     }
@@ -95,19 +77,9 @@ public class CartRepository : ICartRepository
             .FirstOrDefaultAsync(ci => ci.ProductId == productId && ci.CartId == cartId);
     }
     
-    public async Task UpdateCartItemAsync(CartItem cartItem)
+    public Task SaveChangesAsync()
     {
-        _dataContext.CartItems.Update(cartItem);
-        await _dataContext.SaveChangesAsync();
-    }
-    
-    public async Task<CartItem?> GetCartItemAsync(Guid productId, Guid cartId)
-    {
-        return await _dataContext.CartItems
-            .Include(p => p.Product)
-            .Where(ci => ci.ProductId == productId)
-            .Where(ci => ci.CartId == cartId)
-            .FirstOrDefaultAsync();
+        return _dataContext.SaveChangesAsync();
     }
 
     public async Task<List<User>?> GetUsersWithoutCartAsync()
@@ -124,19 +96,9 @@ public class CartRepository : ICartRepository
         return users;
     }
 
-    public async Task ClearCartAsync(Guid cartId)
+    // ExecuteDelete удаляет строки сразу в SQL и не обновляет уже загруженные cart.Items.
+    public Task<int> ClearCartAsync(Guid cartId)
     {
-        var cart = await _dataContext.Carts
-            .Include(c => c.Items)
-            .ThenInclude(p => p.Product)
-            .FirstOrDefaultAsync(c => c.Id == cartId);
-        if (cart == null) return;
-        var items = await _dataContext.CartItems.Where(ci => ci.CartId == cartId).ToListAsync();
-        foreach (var item in items)
-        {
-            cart.Items.Remove(item);
-            _dataContext.CartItems.Remove(item);
-        }
-        await _dataContext.SaveChangesAsync();
+        return _dataContext.CartItems.Where(ci => ci.CartId == cartId).ExecuteDeleteAsync();
     }
 }

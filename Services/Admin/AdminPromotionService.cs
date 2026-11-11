@@ -3,6 +3,7 @@ using AMZN.Models.Promotions;
 using AMZN.Repositories.Promotions;
 using AMZN.Repositories.Categories;
 using AMZN.Repositories.Products;
+using AMZN.Shared.Transactions;
 
 namespace AMZN.Services.Admin;
 
@@ -11,13 +12,17 @@ public class AdminPromotionService
     private readonly IPromotionRepository _promotions;
     private readonly IProductRepository _products;
     private readonly ICategoryRepository _categories;
-    public AdminPromotionService(IPromotionRepository promotions,
+    private readonly ITransactionManager _transactionManager;
+    public AdminPromotionService(
+        IPromotionRepository promotions,
         IProductRepository products,
-        ICategoryRepository categories)
+        ICategoryRepository categories,
+        ITransactionManager transactionManager)
     {
         _promotions = promotions;
         _products = products;
         _categories = categories;
+        _transactionManager = transactionManager;
     }
 
     public async Task<Dictionary<string, string>> AddPromotionAsync(PromotionFormModel formModel)
@@ -45,42 +50,39 @@ public class AdminPromotionService
             EndDate = formModel.EndDate.GetValueOrDefault(),
             CreatedAt = DateTime.UtcNow,
         };
-        if (formModel.ApplyTo == "product")
+        await _transactionManager.ExecuteAsync(async () =>
         {
-            _promotions.AddProductPromotion(promotion);
-            if (_promotions.IsValid(promotion))
-                _promotions.ApplyProductPromotion(promotion);
-        }
-        else
-        {
-            _promotions.AddCategoryPromotion(promotion);
-            if (_promotions.IsValid(promotion))
-                _promotions.ApplyCategoryPromotion(promotion);
-        }
+            if (formModel.ApplyTo == "product")
+                await _promotions.AddProductPromotionAsync(promotion);
+            else
+                await _promotions.AddCategoryPromotionAsync(promotion);
+
+            if (IsValid(promotion, DateTime.UtcNow))
+                await _promotions.ApplyDiscountAsync(promotion);
+        });
         return errors;
     }
 
-    public void CheckPromotionsValidity()
+    public Task CheckPromotionsValidityAsync()
     {
-        var promotions = _promotions.GetPromotions()
-            .OrderBy(a => a.CreatedAt)
-            .ThenBy(a => a.Id)
-            .ToList();
-        var inactivePromotions = promotions.Where(a => a.IsApplied && !_promotions.IsValid(a)).ToList();
-
-        foreach (var promotion in inactivePromotions)
+        return _transactionManager.ExecuteAsync(async () =>
         {
-            _promotions.RemoveProductPromotion(promotion);
-            _promotions.RemoveCategoryPromotion(promotion);
-        }
+            DateTime now = DateTime.UtcNow;
+            var promotionsToRemove = await _promotions.GetAppliedPromotionsOutsideScheduleAsync(now);
 
-        foreach (var promotion in promotions.Where(a => _promotions.IsValid(a)))
-        {
-            if (!promotion.IsApplied || inactivePromotions.Count > 0)
-            {
-                _promotions.ApplyProductPromotion(promotion);
-                _promotions.ApplyCategoryPromotion(promotion);
-            }
-        }
+            foreach (var promotion in promotionsToRemove)
+                await _promotions.RemoveDiscountAsync(promotion);
+
+            // Снятие акции возвращает исходную цену. Применяем активные скидки заново,
+            // чтобы сохранить их на товарах, где акции пересекались.
+            var promotionsToApply = await _promotions.GetActivePromotionsAsync(now, includeApplied: promotionsToRemove.Count > 0);
+            foreach (var promotion in promotionsToApply)
+                await _promotions.ApplyDiscountAsync(promotion);
+        });
+    }
+
+    private static bool IsValid(Promotion promotion, DateTime now)
+    {
+        return promotion.StartDate <= now && now < promotion.EndDate;
     }
 }

@@ -10,9 +10,8 @@ public interface ICartRepository
     
     Task<bool> IsCartExistsAsync(Guid cartId);
     
-    Task<Cart?> GetCartByUserIdAsync(Guid userId);
+    Task<Cart?> GetCartByUserIdAsync(Guid userId, bool includeItems = true);
     Task<bool> IsCartEmptyAsync(Guid cartId);
-    Task UpdateCartAsync(Cart cart);
     
     Task AddCartItemAsync(CartItem cartItem);
     
@@ -24,12 +23,10 @@ public interface ICartRepository
     
     Task<CartItem?> IsItemInCartAsync(Guid productId, Guid cartId);
 
-    Task UpdateCartItemAsync(CartItem cartItem);
-    
-    Task<CartItem?> GetCartItemAsync(Guid productId, Guid cartId);
+    Task SaveChangesAsync();
     
     Task<List<User>?> GetUsersWithoutCartAsync();
     
-    Task ClearCartAsync(Guid cartId);
+    Task<int> ClearCartAsync(Guid cartId);
 
 }

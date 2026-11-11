@@ -20,7 +20,7 @@ Use the sidebar to open products, brands, categories and promotions. Theme and a
 
 ## Product listings
 
-Sellers can see their products, prices and stock levels. Search filters the loaded list. Products can be sorted by title, price or creation date.
+Sellers can see their products, prices and stock levels. Search and sort apply to all their products, with 20 results per page.
 
 <a href="images/admin-products.png"><img src="images/admin-products.png" alt="Light product listings page with search, sorting, stock indicators and edit actions" width="1000"></a>
 

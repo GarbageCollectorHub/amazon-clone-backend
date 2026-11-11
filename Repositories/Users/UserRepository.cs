@@ -122,14 +122,14 @@ namespace AMZN.Repositories.Users
             }
         }
 
-        public async Task<DeliveryAddress?> GetDeliveryAddressByIdAsync(Guid id)
+        public Task<DeliveryAddress?> GetDeliveryAddressByIdAsync(Guid userId, Guid id)
         {
-            return await _db.DeliveryAddresses.FirstOrDefaultAsync(x => x.Id == id);
+            return _db.DeliveryAddresses.FirstOrDefaultAsync(x => x.UserId == userId && x.Id == id);
         }
 
-        public async Task<PaymentMethod?> GetPaymentMethodByIdAsync(Guid id)
+        public Task<PaymentMethod?> GetPaymentMethodByIdAsync(Guid userId, Guid id)
         {
-            return await _db.PaymentMethods.FirstOrDefaultAsync(x => x.Id == id);
+            return _db.PaymentMethods.FirstOrDefaultAsync(x => x.UserId == userId && x.Id == id);
         }
     }
 }

@@ -19,15 +19,6 @@ public class OrderRepository : IOrderRepository
         await _dataContext.SaveChangesAsync();
     }
 
-    public async Task AddOrderItemAsync(OrderItem orderItem)
-    {
-        await _dataContext.OrderItems.AddAsync(orderItem);
-        var order = _dataContext.Orders.FirstOrDefault(o => o.Id == orderItem.OrderId);
-        if (order == null) return;
-        order.OrderItems.Add(orderItem);
-        await _dataContext.SaveChangesAsync();   
-    }
-
     public async Task<Order?> GetPendingOrderByUserIdAsync(Guid userId)
     {
         return await _dataContext.Orders
@@ -35,17 +26,16 @@ public class OrderRepository : IOrderRepository
             .FirstOrDefaultAsync(o => o.UserId == userId && o.Status == OrderStatus.Pending);
     }
     
-    public async Task UpdateOrderAsync(Order order)
+    public Task SaveChangesAsync()
     {
-        _dataContext.Orders.Update(order);
-        await _dataContext.SaveChangesAsync();
+        return _dataContext.SaveChangesAsync();
     }
 
-    public async Task RemoveOrderItemsAsync(Order order)
+    public void ReplaceOrderItems(Order order, List<OrderItem> items)
     {
         _dataContext.OrderItems.RemoveRange(order.OrderItems);
         order.OrderItems.Clear();
-        await _dataContext.SaveChangesAsync();
+        _dataContext.OrderItems.AddRange(items);
     }
     
     public async Task<List<Order>?> GetOrdersAsync(Guid userId)

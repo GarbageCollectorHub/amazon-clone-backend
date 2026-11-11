@@ -1,5 +1,6 @@
 ﻿using AMZN.Data;
 using AMZN.Data.Entities;
+using AMZN.DTOs.Common;
 using AMZN.DTOs.Products.Reviews;
 using AMZN.Repositories.Products.Queries;
 using AMZN.Shared.Helpers.Search;
@@ -81,13 +82,35 @@ namespace AMZN.Repositories.Products
         }
 
         // MyProduct View
-        public Task<List<Product>> GetSellerProductsAsync(Guid sellerId)
+        public async Task<PagedResult<Product>> GetSellerProductsAsync(
+            Guid sellerId, string search, string sort, int page, int pageSize, CancellationToken ct)
         {
-            return _db.Products
-                .AsNoTracking()
-                .Where(x => x.SellerId == sellerId)
-                .OrderByDescending(x => x.CreatedAt)
-                .ToListAsync();
+            var query = _db.Products.AsNoTracking().Where(p => p.SellerId == sellerId);
+            if (search.Length > 0)
+                query = query.Where(p => p.Title.Contains(search));
+
+            var result = new PagedResult<Product>
+            {
+                PageSize = pageSize,
+                TotalItems = await query.CountAsync(ct)
+            };
+            result.Page = Math.Clamp(page, 1, Math.Max(1, result.TotalPages));
+            if (result.TotalItems == 0)
+                return result;
+
+            var sorted = sort switch
+            {
+                "oldest" => query.OrderBy(p => p.CreatedAt),
+                "title" => query.OrderBy(p => p.Title),
+                "price-asc" => query.OrderBy(p => p.CurrentPrice).ThenByDescending(p => p.CreatedAt),
+                "price-desc" => query.OrderByDescending(p => p.CurrentPrice).ThenByDescending(p => p.CreatedAt),
+                _ => query.OrderByDescending(p => p.CreatedAt)
+            };
+            result.Items = await sorted.ThenBy(p => p.Id)
+                .Skip((result.Page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync(ct);
+            return result;
         }
 
         public void RemoveProductImages(IEnumerable<ProductImage> productImages)
@@ -116,9 +139,10 @@ namespace AMZN.Repositories.Products
             )
         {
             IQueryable<Product> query = BuildCatalogQuery(queryParams, categoryIds);
-            query = ApplySort(query, queryParams);
+            // При равных ключах сортировки Id задаёт стабильный порядок для соседних страниц.
+            var sortedQuery = ApplySort(query, queryParams).ThenBy(p => p.Id);
 
-            return query
+            return sortedQuery
                 .Skip(skip)
                 .Take(take)
                 .ToListAsync(ct);
@@ -184,7 +208,7 @@ namespace AMZN.Repositories.Products
             return query;
         }
 
-        private static IQueryable<Product> ApplySort(IQueryable<Product> query, ProductListQueryParams q)
+        private static IOrderedQueryable<Product> ApplySort(IQueryable<Product> query, ProductListQueryParams q)
         {
             var sort = q.Sort?.Trim().ToLowerInvariant();
 
@@ -225,7 +249,7 @@ namespace AMZN.Repositories.Products
             };
         }
 
-        private static IQueryable<Product> ApplySearchRelevanceSort(IQueryable<Product> query, string? search)
+        private static IOrderedQueryable<Product> ApplySearchRelevanceSort(IQueryable<Product> query, string? search)
         {
             if (string.IsNullOrWhiteSpace(search))
             {
@@ -378,13 +402,12 @@ namespace AMZN.Repositories.Products
             };
         }
 
-        public void PurchaseProduct(Guid productId, int quantity)
+        public Task<List<Product>> GetProductsForUpdateAsync(Guid[] productIds)
         {
-            var product = _db.Products.FirstOrDefault(p => p.Id == productId);
-            if (product == null)
-                throw new ArgumentException("Product not found", nameof(productId));
-            product.StockQuantity -= quantity;
-            _db.SaveChanges();
+            return _db.Products
+                .FromSqlRaw("SELECT * FROM [AMZN].[Products] WITH (UPDLOCK, ROWLOCK)")
+                .Where(p => productIds.Contains(p.Id))
+                .ToListAsync();
         }
     }
 }

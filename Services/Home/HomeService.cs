@@ -9,7 +9,6 @@ namespace AMZN.Services.Home
     public class HomeService
     {
         private const decimal HomeMinRating = 2.5m;
-        private const decimal MoreProductsMinRating = HomeMinRating;
         private const decimal UnderTwentyMaxPrice = 20m;
 
         private const int TopCategoriesCount = 3;                    // Топ 3 больш. карточки
@@ -47,10 +46,9 @@ namespace AMZN.Services.Home
             List<Category> blockCategories = BuildBlockCategories(categories, categoryCountsById, topCategoryIds);
             List<HomeCategoryBlockDto> categoryBlocks = await BuildCategoryBlocksAsync(blockCategories, subcategoriesByParentId, ct);
 
-            // Отдельные товарные секции
-            List<Product> popularProducts = await _homeRepository.GetTopRatedProductsAsync(HomeMinRating, PopularProductsCount, ct);
+            // Popular products и More products используют одинаковый рейтинг и порядок; топ-3 берём из топ-7.
+            List<Product> moreProducts = await _homeRepository.GetTopRatedProductsAsync(HomeMinRating, MoreProductsCount, ct);
             List<Product> productsUnderTwenty = await _homeRepository.GetTopRatedProductsUnderPriceAsync(UnderTwentyMaxPrice, HomeMinRating, ProductsUnderTwentyCount, ct);
-            List<Product> moreProducts = await _homeRepository.GetTopRatedProductsAsync(MoreProductsMinRating, MoreProductsCount, ct);
 
             // Popular categories без top 3
             List<HomeCategoryCardDto> popularCategories = BuildPopularCategories(categories, categoryCountsById, topCategoryIds);
@@ -59,7 +57,7 @@ namespace AMZN.Services.Home
             {
                 TopCategories = topCategories,
                 CategoryBlocks = categoryBlocks,
-                PopularProducts = MapProductCards(popularProducts),
+                PopularProducts = MapProductCards(moreProducts.Take(PopularProductsCount)),
                 PopularCategories = popularCategories,
                 ProductsUnderTwenty = MapProductCards(productsUnderTwenty),
                 MoreProducts = MapProductCards(moreProducts)

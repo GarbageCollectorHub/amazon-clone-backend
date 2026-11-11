@@ -6,19 +6,10 @@ public interface IPromotionRepository
 {
     Task<bool> NameExistsAsync(string name);
 
-    void AddProductPromotion(Promotion promotion);
-
-    void AddCategoryPromotion(Promotion promotion);
-
-    void ApplyProductPromotion(Promotion promotion);
-
-    void ApplyCategoryPromotion(Promotion promotion);
-
-    void RemoveProductPromotion(Promotion promotion);
-
-    void RemoveCategoryPromotion(Promotion promotion);
-
-    bool IsValid(Promotion promotion);
-
-    List<Promotion> GetPromotions();
+    Task AddProductPromotionAsync(Promotion promotion);
+    Task AddCategoryPromotionAsync(Promotion promotion);
+    Task ApplyDiscountAsync(Promotion promotion);
+    Task RemoveDiscountAsync(Promotion promotion);
+    Task<List<Promotion>> GetAppliedPromotionsOutsideScheduleAsync(DateTime now);
+    Task<List<Promotion>> GetActivePromotionsAsync(DateTime now, bool includeApplied);
 }

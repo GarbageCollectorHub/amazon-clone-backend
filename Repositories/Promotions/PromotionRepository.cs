@@ -1,4 +1,4 @@
-﻿using AMZN.Data;
+using AMZN.Data;
 using AMZN.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,149 +17,96 @@ public class PromotionRepository : IPromotionRepository
     {
         return _dataContext.Promotions.AnyAsync(p => p.Name == name);
     }
-    
-    public void AddProductPromotion(Promotion promotion)
+
+    public async Task AddProductPromotionAsync(Promotion promotion)
     {
         _dataContext.Promotions.Add(promotion);
-        var product = _dataContext.Products.FirstOrDefault(p => p.Title == promotion.ProductTitle);
-        if (product != null)
+        var productId = await _dataContext.Products.Where(p => p.Title == promotion.ProductTitle)
+            .Select(p => (Guid?)p.Id).FirstOrDefaultAsync();
+        if (productId.HasValue)
         {
             _dataContext.ProductPromotions.Add(new()
             {
-                ProductId = product.Id,
+                ProductId = productId.Value,
                 PromotionId = promotion.Id
             });
         }
 
-        _dataContext.SaveChanges();
+        await _dataContext.SaveChangesAsync();
     }
 
-    public void AddCategoryPromotion(Promotion promotion)
+    public async Task AddCategoryPromotionAsync(Promotion promotion)
     {
         _dataContext.Promotions.Add(promotion);
-        var category = _dataContext.Categories.FirstOrDefault(c => c.Name == promotion.ProductTitle);
-        if (category != null)
+        var categoryId = await _dataContext.Categories.Where(c => c.Name == promotion.ProductTitle)
+            .Select(c => (Guid?)c.Id).FirstOrDefaultAsync();
+        if (categoryId.HasValue)
         {
             _dataContext.CategoryPromotions.Add(new()
             {
-                CategoryId = category.Id,
+                CategoryId = categoryId.Value,
                 PromotionId = promotion.Id
             });
         }
-        
-        _dataContext.SaveChanges();
+
+        await _dataContext.SaveChangesAsync();
     }
 
-    public void ApplyProductPromotion(Promotion promotion)
+    public async Task ApplyDiscountAsync(Promotion promotion)
     {
-        var productPromotion = _dataContext.ProductPromotions.FirstOrDefault(pa => pa.Promotion.Id == promotion.Id);
-        if (productPromotion != null)
-        {
-            var product = _dataContext.Products.FirstOrDefault(p => p.Id == productPromotion.ProductId);
-            if (product != null)
-            {
-                if (product.OriginalPrice == null)
-                {
-                    product.OriginalPrice = product.CurrentPrice;
-                    product.CurrentPrice *= (decimal)((100 - promotion.DiscountPercent) * 0.01);
-                }
-                else
-                {
-                    product.CurrentPrice = (decimal)product.OriginalPrice * (decimal)((100 - promotion.DiscountPercent) * 0.01);
-                }
-                _dataContext.Products.Update(product);
-                promotion.IsApplied = true;
-                _dataContext.SaveChanges();
-            }
-        }
+        decimal priceMultiplier = (100 - promotion.DiscountPercent) / 100m;
+
+        // Повторное применение считает скидку от исходной цены, а не от уже сниженной.
+        int updated = await GetProductsForPromotion(promotion.Id).ExecuteUpdateAsync(setters => setters
+            .SetProperty(p => p.OriginalPrice, p => p.OriginalPrice ?? p.CurrentPrice)
+            .SetProperty(p => p.CurrentPrice, p => (p.OriginalPrice ?? p.CurrentPrice) * priceMultiplier));
+
+        if (updated == 0)
+            return;
+
+        promotion.IsApplied = true;
+        await _dataContext.SaveChangesAsync();
     }
 
-    public void ApplyCategoryPromotion(Promotion promotion)
+    public async Task RemoveDiscountAsync(Promotion promotion)
     {
-        var categoryPromotion = _dataContext.CategoryPromotions.FirstOrDefault(ca => ca.Promotion.Id == promotion.Id);
-        if (categoryPromotion != null)
-        {
-            var category = _dataContext.Categories.FirstOrDefault(c => c.Id == categoryPromotion.CategoryId);
-            if (category != null)
-            {
-                var products = _dataContext.Products.Where(p => p.CategoryId == category.Id);
-                if (products.Count() != 0)
-                {
-                    foreach (var product in products)
-                    {
-                        if (product.OriginalPrice == null)
-                        {
-                            product.OriginalPrice = product.CurrentPrice;
-                            product.CurrentPrice *= (decimal)((100 - promotion.DiscountPercent) * 0.01);
-                        }
-                        else
-                        {
-                            product.CurrentPrice = (decimal)product.OriginalPrice * (decimal)((100 - promotion.DiscountPercent) * 0.01);
-                        }
-                        _dataContext.Products.Update(product);
-                    }
-                    promotion.IsApplied = true;
-                    _dataContext.SaveChanges();
-                }
-            }
-        }
+        await GetProductsForPromotion(promotion.Id)
+            .Where(p => p.OriginalPrice != null)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(p => p.CurrentPrice, p => p.OriginalPrice ?? p.CurrentPrice)
+                .SetProperty(p => p.OriginalPrice, (decimal?)null));
+
+        promotion.IsApplied = false;
+        await _dataContext.SaveChangesAsync();
     }
 
-    public void RemoveProductPromotion(Promotion promotion)
+    public Task<List<Promotion>> GetAppliedPromotionsOutsideScheduleAsync(DateTime now)
     {
-        var productPromotion = _dataContext.ProductPromotions.FirstOrDefault(pa => pa.Promotion.Id == promotion.Id);
-        if (productPromotion != null)
-        {
-            var product = _dataContext.Products.FirstOrDefault(p => p.Id == productPromotion.ProductId);
-            if (product != null)
-            {
-                if (product.OriginalPrice != null)
-                {
-                    product.CurrentPrice = (decimal)product.OriginalPrice;
-                    product.OriginalPrice = null;
-                    _dataContext.Products.Update(product);
-                }
-            }
-            promotion.IsApplied = false;
-            _dataContext.SaveChanges();
-        }
+        return _dataContext.Promotions
+            .Where(p => p.IsApplied && (now < p.StartDate || now >= p.EndDate))
+            .OrderBy(p => p.CreatedAt)
+            .ThenBy(p => p.Id)
+            .ToListAsync();
     }
 
-    public void RemoveCategoryPromotion(Promotion promotion)
+    public Task<List<Promotion>> GetActivePromotionsAsync(DateTime now, bool includeApplied)
     {
-        var categoryPromotion = _dataContext.CategoryPromotions.FirstOrDefault(ca => ca.Promotion.Id == promotion.Id);
-        if (categoryPromotion != null)
-        {
-            var category = _dataContext.Categories.FirstOrDefault(c => c.Id == categoryPromotion.CategoryId);
-            if (category != null)
-            {
-                var products = _dataContext.Products.Where(p => p.CategoryId == category.Id);
-                if (products.Count() != 0)
-                {
-                    foreach (var product in products)
-                    {
-                        if (product.OriginalPrice != null)
-                        {
-                            product.CurrentPrice = (decimal)product.OriginalPrice;
-                            product.OriginalPrice = null;
-                            _dataContext.Products.Update(product);
-                        }
-                    }
-                }
-            }
-            promotion.IsApplied = false;
-            _dataContext.SaveChanges();
-        }
+        var query = _dataContext.Promotions.Where(p => p.StartDate <= now && now < p.EndDate);
+        if (!includeApplied)
+            query = query.Where(p => !p.IsApplied);
+
+        return query.OrderBy(p => p.CreatedAt).ThenBy(p => p.Id).ToListAsync();
     }
 
-    public bool IsValid(Promotion promotion)
+    private IQueryable<Product> GetProductsForPromotion(Guid promotionId)
     {
-        DateTime now = DateTime.UtcNow;
-        return promotion.StartDate <= now && promotion.EndDate > now;
-    }
+        var directProductIds = _dataContext.ProductPromotions
+            .Where(link => link.PromotionId == promotionId)
+            .Select(link => link.ProductId);
+        var categoryIds = _dataContext.CategoryPromotions
+            .Where(link => link.PromotionId == promotionId)
+            .Select(link => link.CategoryId);
 
-    public List<Promotion> GetPromotions()
-    {
-        return _dataContext.Promotions.ToList();
+        return _dataContext.Products.Where(p => directProductIds.Contains(p.Id) || categoryIds.Contains(p.CategoryId));
     }
 }

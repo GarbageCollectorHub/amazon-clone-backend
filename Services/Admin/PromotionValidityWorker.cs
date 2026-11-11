@@ -26,7 +26,7 @@ public class PromotionValidityWorker : BackgroundService
             try
             {
                 using var scope = _scopeFactory.CreateScope();
-                scope.ServiceProvider.GetRequiredService<AdminPromotionService>().CheckPromotionsValidity();
+                await scope.ServiceProvider.GetRequiredService<AdminPromotionService>().CheckPromotionsValidityAsync();
             }
             catch (Exception exception) when (!stoppingToken.IsCancellationRequested)
             {

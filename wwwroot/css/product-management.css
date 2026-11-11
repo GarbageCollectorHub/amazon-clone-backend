@@ -44,6 +44,12 @@
     height: 54px;
     font-size: 20px;
 }
+.products-pagination {
+    margin: 14px 0 0;
+}
+.products-pagination .products-count {
+    margin: 0;
+}
 .products-table {
     min-width: 900px;
 }

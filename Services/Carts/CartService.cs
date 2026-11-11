@@ -5,7 +5,6 @@ using AMZN.Repositories.Products;
 using AMZN.Repositories.Users;
 using AMZN.Shared.Exceptions;
 using AMZN.Shared.Exceptions.Errors;
-using AMZN.Shared.Transactions;
 
 namespace AMZN.Services.Carts;
 
@@ -48,8 +47,7 @@ public class CartService
                 User = user,
                 Items = new List<CartItem>()
             };
-            await _cartRepository.AddCartAsync(cart);
-            CartItem cartItem = new()
+            cart.Items.Add(new CartItem
             {
                 Id = Guid.NewGuid(),
                 CartId = cart.Id,
@@ -57,13 +55,16 @@ public class CartService
                 Product = product,
                 Cart = cart,
                 Quantity = 1
-            };
-            await _cartRepository.AddCartItemAsync(cartItem);
-            await _cartRepository.UpdateCartAsync(cart);
+            });
+            await _cartRepository.AddCartAsync(cart);
         }
         else
         {
-            if (await _cartRepository.IsCartEmptyAsync(cart.Id))
+            var item = cart.Items.FirstOrDefault(x =>
+            {
+                return x.ProductId == productId;
+            });
+            if (item == null)
             {
                 CartItem cartItem = new()
                 {
@@ -75,27 +76,11 @@ public class CartService
                     Quantity = 1
                 };
                 await _cartRepository.AddCartItemAsync(cartItem);
-                await _cartRepository.UpdateCartAsync(cart);
             }
             else
             {
-                var item = await _cartRepository.GetCartItemAsync(productId, cart.Id);
-                if (item == null)
-                {
-                    item = new()
-                    {
-                        Id = Guid.NewGuid(),
-                        CartId = cart.Id,
-                        ProductId = productId,
-                        Product = product,
-                        Cart = cart,
-                        Quantity = 1
-                    };
-                    await _cartRepository.AddCartItemAsync(item);
-                }
-                else
-                    item.Quantity++;
-                await _cartRepository.UpdateCartItemAsync(item);
+                item.Quantity++;
+                await _cartRepository.SaveChangesAsync();
             }
         }
         List<CartItemDto> items = new List<CartItemDto>();
@@ -137,7 +122,10 @@ public class CartService
             throw new ApiException(ErrorCodes.CartNotFound, "Cart not found", StatusCodes.Status404NotFound);
         }
         
-        var item = await _cartRepository.GetCartItemAsync(productId, cart.Id);
+        var item = cart.Items.FirstOrDefault(x =>
+        {
+            return x.ProductId == productId;
+        });
         if (item == null)
         {
             throw new ApiException(ErrorCodes.ProductNotFound, "Product not in cart", StatusCodes.Status404NotFound);
@@ -146,7 +134,7 @@ public class CartService
         await _cartRepository.RemoveCartItemAsync(item);
         
         List<CartItemDto> items = new List<CartItemDto>();
-        if (!await _cartRepository.IsCartEmptyAsync(cart.Id))
+        if (cart.Items.Count > 0)
         {
             foreach (var ci in cart.Items)
             {
@@ -176,19 +164,17 @@ public class CartService
             throw new ApiException(ErrorCodes.UserNotFound, "User not found", StatusCodes.Status404NotFound);
         }
         
-        var cart = await _cartRepository.GetCartByUserIdAsync(user.Id);
+        var cart = await _cartRepository.GetCartByUserIdAsync(user.Id, includeItems: false);
         if (cart == null)
         {
             throw new ApiException(ErrorCodes.CartNotFound, "Cart not found", StatusCodes.Status404NotFound);
         }
 
-        if (await _cartRepository.IsCartEmptyAsync(cart.Id))
+        if (await _cartRepository.ClearCartAsync(cart.Id) == 0)
         {
             throw new ApiException(ErrorCodes.ProductNotFound, "Cart is empty", StatusCodes.Status404NotFound);
         }
 
-        await _cartRepository.ClearCartAsync(cart.Id);
-        
         List<CartItemDto> items = new List<CartItemDto>();
         
         return new CartResponseDto()
@@ -213,7 +199,7 @@ public class CartService
         }
         
         List<CartItemDto> items = new List<CartItemDto>();
-        if (!await _cartRepository.IsCartEmptyAsync(cart.Id))
+        if (cart.Items.Count > 0)
         {
             foreach (CartItem ci in cart.Items)
             {
@@ -256,14 +242,17 @@ public class CartService
             throw new ApiException(ErrorCodes.CartNotFound, "Cart not found", StatusCodes.Status404NotFound);
         }
         
-        var item = await _cartRepository.GetCartItemAsync(productId, cart.Id);
+        var item = cart.Items.FirstOrDefault(x =>
+        {
+            return x.ProductId == productId;
+        });
         if (item == null)
         {
             throw new ApiException(ErrorCodes.ProductNotFound, "Product not in cart", StatusCodes.Status404NotFound);
         }
         
         item.Quantity++;
-        await _cartRepository.UpdateCartItemAsync(item);
+        await _cartRepository.SaveChangesAsync();
         
         List<CartItemDto> items = new List<CartItemDto>();
         foreach (var ci in cart.Items)
@@ -304,7 +293,10 @@ public class CartService
             throw new ApiException(ErrorCodes.CartNotFound, "Cart not found", StatusCodes.Status404NotFound);
         }
         
-        var item = await _cartRepository.GetCartItemAsync(productId, cart.Id);
+        var item = cart.Items.FirstOrDefault(x =>
+        {
+            return x.ProductId == productId;
+        });
         if (item == null)
         {
             throw new ApiException(ErrorCodes.ProductNotFound, "Product not in cart", StatusCodes.Status404NotFound);
@@ -317,11 +309,11 @@ public class CartService
         }
         else
         {
-            await _cartRepository.UpdateCartItemAsync(item);
+            await _cartRepository.SaveChangesAsync();
         }
         
         List<CartItemDto> items = new List<CartItemDto>();
-        if (!await _cartRepository.IsCartEmptyAsync(cart.Id))
+        if (cart.Items.Count > 0)
         {
             foreach (var ci in cart.Items)
             {
