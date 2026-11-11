@@ -158,6 +158,8 @@ builder.Services.AddScoped<ISearchRepository, SearchRepository>();
 builder.Services.AddScoped<SearchService>();
 // Storage
 builder.Services.AddSingleton<ICloudStorageService, CloudStorageService>();
+builder.Services.AddSingleton<IImageUploadQuota, SqlImageUploadQuota>();
+builder.Services.AddSingleton(TimeProvider.System);
 
 // EF TransactionManager
 builder.Services.AddScoped<ITransactionManager, EfTransactionManager>();

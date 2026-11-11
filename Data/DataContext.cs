@@ -10,6 +10,7 @@ public class DataContext: DbContext
 
     public DbSet<Product> Products { get; private set; } = null!;
     public DbSet<ProductImage> ProductImages { get; private set; } = null!;
+    public DbSet<ImageUploadUsage> ImageUploadUsage { get; private set; } = null!;
     public DbSet<ProductRating> ProductRatings { get; private set; } = null!;
     public DbSet<ProductReview> ProductReviews { get; private set; } = null!;
     public DbSet<ProductQuestion> ProductQuestions { get; private set; } = null!;
@@ -44,6 +45,14 @@ public class DataContext: DbContext
         base.OnModelCreating(modelBuilder);
 
         modelBuilder.HasDefaultSchema("AMZN");
+
+        modelBuilder.Entity<ImageUploadUsage>(usage =>
+        {
+            usage.HasKey(x => x.Month);
+            usage.Property(x => x.Month).ValueGeneratedNever();
+            usage.ToTable("ImageUploadUsage", t =>
+                t.HasCheckConstraint("CK_ImageUploadUsage_ReservedBytes", "ReservedBytes >= 0"));
+        });
 
 
         modelBuilder.Entity<User>(u =>

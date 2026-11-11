@@ -7,7 +7,8 @@ namespace AMZN.Tests;
 
 public class CloudStorageServiceTests
 {
-    // Отключение загрузок отклоняет даже допустимый файл до проверки настройки Blob.
+    // Выключаем ImageUploads:Enabled и передаём допустимый файл без настроенной строки подключения.
+    // Ожидаем именно ошибку отключённых загрузок: запрет должен сработать раньше доступа к Blob.
     [Fact]
     public async Task SaveImageAsync_UploadsDisabled_RejectsBeforeAccessingStorage()
     {
@@ -19,7 +20,8 @@ public class CloudStorageServiceTests
         Assert.Contains("uploads are currently disabled", error.Message);
     }
 
-    // Вызов storage-сервиса без файла явно отклоняется как неверный аргумент.
+    // Вызываем сервис записи без файла. Это ошибка вызывающего кода, поэтому ожидаем ArgumentNullException,
+    // а не попытку подключения к хранилищу или случайную ошибку при обращении к свойствам файла.
     [Fact]
     public async Task SaveImageAsync_MissingFile_ThrowsArgumentNullException()
     {
@@ -27,7 +29,8 @@ public class CloudStorageServiceTests
             () => CreateStorage().SaveImageAsync(null!));
     }
 
-    // Сервис сам проверяет формат и размер: неверный файл отклоняется до доступа к Blob.
+    // Обращаемся прямо к сервису записи, обходя валидацию MVC-формы, и передаём неверный формат или размер.
+    // Сервис должен сам отклонить файл с нужной причиной; без настроенного Blob это также проверяет порядок проверок.
     [Theory]
     [InlineData("photo.svg", "image/svg+xml", 10, "extension")]
     [InlineData("photo.jpg", "text/html", 10, "content type")]
@@ -44,7 +47,8 @@ public class CloudStorageServiceTests
         Assert.Contains(expectedError, error.Message);
     }
 
-    // Допустимый файл проходит валидацию, но без настройки Blob возвращается ошибка конфигурации.
+    // Передаём допустимый файл, не задавая подключение к Azure. Проверки файла должны пройти,
+    // после чего сервис возвращает понятное сообщение об отсутствии настройки хранилища.
     [Fact]
     public async Task SaveImageAsync_ValidFileWithoutStorage_ReturnsConfigurationError()
     {
@@ -54,15 +58,49 @@ public class CloudStorageServiceTests
         Assert.Contains("storage is not configured", error.Message);
     }
 
-    private static CloudStorageService CreateStorage(bool uploadsEnabled = true)
+    // Передаём валидный файл при исчерпанной квоте. Сервис должен учесть точный размер файла
+    // и вернуть сообщение о квоте до обращения к Blob. Эмулятор для этого теста не запускаем.
+    [Fact]
+    public async Task SaveImageAsync_QuotaExhausted_RejectsBeforeCallingBlob()
+    {
+        var quota = new FullQuota();
+        var storage = CreateStorage(quota: quota, storageConnectionString: "UseDevelopmentStorage=true");
+        var file = TestImages.Create(size: 123);
+
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() => storage.SaveImageAsync(file));
+
+        Assert.Contains("monthly upload allowance", error.Message);
+        Assert.Equal(file.Length, quota.RequestedBytes);
+    }
+
+    private static CloudStorageService CreateStorage(bool uploadsEnabled = true,
+        IImageUploadQuota? quota = null, string? storageConnectionString = null)
     {
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["ImageUploads:Enabled"] = uploadsEnabled.ToString()
+                ["ImageUploads:Enabled"] = uploadsEnabled.ToString(),
+                ["ConnectionStrings:AzureStorage"] = storageConnectionString
             })
             .Build();
 
-        return new CloudStorageService(configuration, NullLogger<CloudStorageService>.Instance);
+        return new CloudStorageService(configuration, NullLogger<CloudStorageService>.Instance, quota ?? new UnexpectedQuota());
+    }
+
+    private sealed class UnexpectedQuota : IImageUploadQuota
+    {
+        public Task<bool> TryReserveAsync(long bytes, CancellationToken cancellationToken = default)
+            => throw new InvalidOperationException("Quota must not be accessed before file and storage checks.");
+    }
+
+    private sealed class FullQuota : IImageUploadQuota
+    {
+        public long RequestedBytes { get; private set; }
+
+        public Task<bool> TryReserveAsync(long bytes, CancellationToken cancellationToken = default)
+        {
+            RequestedBytes = bytes;
+            return Task.FromResult(false);
+        }
     }
 }

@@ -4,7 +4,9 @@ using Azure;
 using AMZN.Shared.Validation.Files;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using System.Data.Common;
 
 
 public class CloudStorageService : ICloudStorageService
@@ -14,15 +16,16 @@ public class CloudStorageService : ICloudStorageService
     private readonly BlobContainerClient? _containerClient;
     private readonly ILogger<CloudStorageService> _logger;
     private readonly IConfiguration _configuration;
-    private readonly SemaphoreSlim _uploadSlots = new(2);
+    private readonly IImageUploadQuota _uploadQuota;
 
     private BlobContainerClient ContainerClient => _containerClient
         ?? throw new InvalidOperationException("Image storage is not configured. Image uploads are unavailable.");
 
-    public CloudStorageService(IConfiguration configuration, ILogger<CloudStorageService> logger)
+    public CloudStorageService(IConfiguration configuration, ILogger<CloudStorageService> logger, IImageUploadQuota uploadQuota)
     {
         _logger = logger;
         _configuration = configuration;
+        _uploadQuota = uploadQuota;
         var connectionString = configuration.GetConnectionString("AzureStorage");
 
         if (string.IsNullOrWhiteSpace(connectionString))
@@ -57,8 +60,20 @@ public class CloudStorageService : ICloudStorageService
             HttpHeaders = new BlobHttpHeaders { ContentType = file.ContentType }
         };
 
-        if (!await _uploadSlots.WaitAsync(0, cancellationToken))
-            throw new InvalidOperationException("Image storage is busy. Please try again in a moment.");
+        // Reserve before any Blob call. Do not refund on failure: a lost response may hide a completed write.
+        bool reserved;
+        try
+        {
+            reserved = await _uploadQuota.TryReserveAsync(file.Length, cancellationToken);
+        }
+        catch (Exception exception) when (exception is DbException or DbUpdateException)
+        {
+            _logger.LogWarning(exception, "Failed to reserve the monthly image upload allowance");
+            throw new InvalidOperationException("Image uploads are unavailable. Please try again later.", exception);
+        }
+
+        if (!reserved)
+            throw new InvalidOperationException("This image exceeds the remaining monthly upload allowance. Try a smaller image or come back next month.");
 
         try
         {
@@ -73,10 +88,6 @@ public class CloudStorageService : ICloudStorageService
         {
             _logger.LogWarning(exception, "Failed to upload an image to Azure Blob Storage");
             throw new InvalidOperationException("Image storage is unavailable. Please try again later.", exception);
-        }
-        finally
-        {
-            _uploadSlots.Release();
         }
     }
 

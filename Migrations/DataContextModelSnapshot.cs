@@ -222,6 +222,22 @@ namespace AMZN.Migrations
                     b.ToTable("DeliveryAddresses", "AMZN");
                 });
 
+            modelBuilder.Entity("AMZN.Data.Entities.ImageUploadUsage", b =>
+                {
+                    b.Property<int>("Month")
+                        .HasColumnType("int");
+
+                    b.Property<long>("ReservedBytes")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Month");
+
+                    b.ToTable("ImageUploadUsage", "AMZN", t =>
+                        {
+                            t.HasCheckConstraint("CK_ImageUploadUsage_ReservedBytes", "ReservedBytes >= 0");
+                        });
+                });
+
             modelBuilder.Entity("AMZN.Data.Entities.Order", b =>
                 {
                     b.Property<Guid>("Id")

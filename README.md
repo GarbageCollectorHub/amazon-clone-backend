@@ -251,13 +251,17 @@ Click a preview or its **Open full size** link to read the endpoint list.
 
 ## Tests
 
-Run the unit tests from the project root:
+Run the tests from the project root:
 
 ```powershell
 dotnet test AMZN.sln
 ```
 
-The tests cover image file rules and upload checks. They do not need SQL Server, Azure or secret settings.
+The tests cover image file rules, upload checks, forwarded headers and request limits for authentication and catalog changes. HTTP tests also check shared counters, 429 responses and the 25 MiB request limit.
+
+Some HTTP tests start a local server to check the total request size. The default test run needs no SQL Server, Azure or secret settings. To run the optional quota tests on Windows, install SQL Server LocalDB and set `AMZN_TEST_LOCALDB=1` before running the tests. They use temporary databases, not the application database.
+
+See [deployment checks](docs/deployment-checks.md) for the manual IP and rate-limit check after publishing.
 
 ## Running locally
 
@@ -348,6 +352,8 @@ Swagger and the API documentation links are controlled by `Swagger:Enabled` in t
 To enable uploads, set `ConnectionStrings:AzureStorage` to your Azure Storage connection string and restart the application. The `amzn-storage` container is created automatically on the first image upload if it does not already exist.
 
 Catalog images use public blob URLs. The storage account must allow anonymous blob access. If you use an existing container, enable public read access for its blobs.
+
+Image uploads have a shared allowance of 500 MiB per UTC calendar month by default. Existing images stay available when the limit is reached. Use `ImageUploads:MonthlyLimitMiB` to change the allowance, or set `ImageUploads:Enabled` to `false` to pause new uploads.
 
 You can leave `AzureStorage` empty to explore the API and MVC pages without image uploads. If you try to upload an image, the app shows an error message. Browsing product lists does not require a server-side connection to Blob Storage.
 
