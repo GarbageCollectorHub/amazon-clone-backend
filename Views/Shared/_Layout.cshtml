@@ -154,6 +154,20 @@
                         </form>
                         <p id="auth-progress" class="auth-progress mt-3 mb-0" role="status" hidden>This is taking a little longer. Please wait.</p>
                         <div id="message" class="auth-feedback mt-3" role="alert"></div>
+                        <div role="status">
+                            <div id="auth-retry-notice" class="auth-retry-notice mt-3" hidden>
+                                <div class="d-flex align-items-start gap-2">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" class="flex-shrink-0 mt-1" aria-hidden="true">
+                                        <circle cx="12" cy="12" r="9" />
+                                        <path d="M12 7v5l3 2" />
+                                    </svg>
+                                    <div>
+                                        <strong>The demo needs a little more time</strong>
+                                        <p class="mb-0 mt-1">The database may still be starting up. Wait <strong>20–30 seconds</strong>, then click <strong>Sign in</strong> again.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="action-button action-button--secondary" data-bs-dismiss="modal">Cancel</button>

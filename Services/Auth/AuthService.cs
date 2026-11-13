@@ -8,11 +8,14 @@ using AMZN.Shared.Exceptions.Errors;
 using AMZN.Shared.Limits;
 using AMZN.Shared.Mapping;
 using AMZN.Shared.Transactions;
+using Microsoft.Data.SqlClient;
 
 namespace AMZN.Services.Auth
 {
     public class AuthService : IAuthService
     {
+        private const int SqlDatabaseUnavailableErrorNumber = 40613;
+
         private readonly IUserRepository _users;
         private readonly IUserRefreshTokenRepository _refreshTokens;
         private readonly IPasswordHasher _passwordHasher;
@@ -78,16 +81,28 @@ namespace AMZN.Services.Auth
             string email = NormalizeEmail(dto.Email);
             _logger.LogInformation("Login attempt: email={Email}", email);
 
-            User? user = await _users.GetByEmailAsync(email);
-
-            if (user is null || !_passwordHasher.VerifyPassword(dto.Password, user.PasswordHash))
+            try
             {
-                _logger.LogWarning("Login failed: invalid credentials, email={Email}", email);
-                throw new ApiException(ErrorCodes.AuthInvalidCredentials, "Invalid credentials", StatusCodes.Status401Unauthorized);
-            }
+                User? user = await _users.GetByEmailAsync(email);
 
-            _logger.LogInformation("Login success: userId={UserId}, email={Email}", user.Id, email);
-            return await IssueTokenPairAsync(user);
+                if (user is null || !_passwordHasher.VerifyPassword(dto.Password, user.PasswordHash))
+                {
+                    _logger.LogWarning("Login failed: invalid credentials, email={Email}", email);
+                    throw new ApiException(ErrorCodes.AuthInvalidCredentials, "Invalid credentials", StatusCodes.Status401Unauthorized);
+                }
+
+                AuthResponseDto response = await IssueTokenPairAsync(user);
+                _logger.LogInformation("Login success: userId={UserId}, email={Email}", user.Id, email);
+                return response;
+            }
+            // На бесплатном тарифе Azure SQL база демо может уходить на паузу после простоя.
+            // Если повторы подключения не помогли и SQL вернул 40613, отдаём 503,
+            // чтобы форма входа подсказала подождать и попробовать снова.
+            catch (Exception exception) when (IsSqlDatabaseUnavailable(exception))
+            {
+                _logger.LogWarning(exception, "The database was unavailable during sign-in");
+                throw new ApiException(ErrorCodes.DatabaseUnavailable, "The database is temporarily unavailable.", StatusCodes.Status503ServiceUnavailable);
+            }
         }
 
 
@@ -129,6 +144,28 @@ namespace AMZN.Services.Auth
 
 
 
+
+        private static bool IsSqlDatabaseUnavailable(Exception? exception)
+        {
+            while (exception != null)
+            {
+                if (exception is SqlException sqlException)
+                {
+                    return sqlException.Number == SqlDatabaseUnavailableErrorNumber;
+                }
+
+                // Show the retry notice only if all failed connection attempts report the same SQL error.
+                if (exception is AggregateException aggregateException)
+                {
+                    var attempts = aggregateException.Flatten().InnerExceptions;
+                    return attempts.Count > 0 && attempts.All(IsSqlDatabaseUnavailable);
+                }
+
+                exception = exception.InnerException;
+            }
+
+            return false;
+        }
 
         private static string NormalizeEmail(string email)
         {

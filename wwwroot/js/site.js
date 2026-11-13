@@ -10,6 +10,8 @@ document.addEventListener("submit", e => {
         const submitBtn = document.querySelector('[form="auth-modal-form"][type="submit"]');
         const submitLabel = submitBtn?.querySelector(".auth-submit__label");
         const progressEl = document.getElementById("auth-progress");
+        const retryNotice = document.getElementById("auth-retry-notice");
+        const databaseUnavailableCode = "database.unavailable";
         const modal = document.getElementById("authModal");
         const controller = new AbortController();
         const cancelRequest = () => controller.abort();
@@ -20,6 +22,7 @@ document.addEventListener("submit", e => {
         submitBtn?.classList.add("is-loading");
         if (submitLabel) submitLabel.textContent = "Signing in…";
         if (progressEl) progressEl.hidden = true;
+        if (retryNotice) retryNotice.hidden = true;
         if (messageEl) { messageEl.textContent = ""; messageEl.className = ""; }
         modal?.addEventListener("hidden.bs.modal", cancelRequest, { once: true });
         const progressTimer = setTimeout(() => {
@@ -31,21 +34,28 @@ document.addEventListener("submit", e => {
             body: new FormData(form),
             signal: controller.signal
         })
-            .then(r => {
-                if (r.status >= 500) {
-                    return { status: r.status, message: "Server error. Please try again later." };
-                }
-                return r.json();
-            })
-            .then(j => {
-                if (j.status === 200) {
+            .then(async response => {
+                if (response.status === 200) {
                     signedIn = true;
                     window.location.reload();
-                } else {
-                    if (messageEl) {
-                        messageEl.textContent = j.message || "Login failed.";
-                        messageEl.className = "text-danger small";
-                    }
+                    return;
+                }
+
+                const isJson = response.headers.get("content-type")?.includes("application/json");
+                const error = isJson ? await response.json().catch(parseError => {
+                    if (parseError.name === "AbortError") throw parseError;
+                    return null;
+                }) : null;
+
+                // По одному статусу 503 нельзя понять, что недоступна база.
+                // Подсказку про ожидание показываем только для кода database.unavailable.
+                if (response.status === 503 && error?.code === databaseUnavailableCode && retryNotice) {
+                    retryNotice.hidden = false;
+                } else if (messageEl) {
+                    messageEl.textContent = response.status >= 500
+                        ? "Server error. Please try again later."
+                        : error?.message || "Request failed. Please try again.";
+                    messageEl.className = "text-danger small";
                 }
             })
             .catch(error => {

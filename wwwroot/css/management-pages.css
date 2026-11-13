@@ -509,6 +509,14 @@ body.theme-scope.modal-open, .theme-scope .modal {
     font-size: 14px;
     color: var(--ui-muted);
 }
+.auth-retry-notice {
+    padding: 12px 14px;
+    border: 1px solid var(--bs-primary-border-subtle);
+    border-radius: 8px;
+    background: var(--bs-primary-bg-subtle);
+    color: var(--bs-primary-text-emphasis);
+    font-size: 14px;
+}
 .auth-submit {
     min-width: 168px;
 }

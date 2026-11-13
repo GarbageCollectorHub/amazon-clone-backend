@@ -60,16 +60,11 @@ public class AdminController : Controller
     [AllowAnonymous]
     [ValidateAntiForgeryToken]
     [EnableRateLimiting(RateLimitingExtensions.LoginPolicy)]
-    public async Task<JsonResult> Login([FromForm] LoginRequestDto? request)
+    public async Task<IActionResult> Login([FromForm] LoginRequestDto? request)
     {
         if (request == null || !ModelState.IsValid)
         {
-            Response.StatusCode = StatusCodes.Status400BadRequest;
-            return Json(new
-            {
-                status = StatusCodes.Status400BadRequest,
-                message = "Email and password are required"
-            });
+            return BadRequest(new { message = "Email and password are required" });
         }
 
 
@@ -79,12 +74,11 @@ public class AdminController : Controller
             SetAuthCookies(response);
 
             TempData["Success"] = "Signed in successfully!";
-            return Json(new { status = StatusCodes.Status200OK, message = "OK" });
+            return Ok();
         }
         catch (ApiException exception)
         {
-            Response.StatusCode = exception.StatusCode;
-            return Json(new { status = exception.StatusCode, message = exception.Message });
+            return StatusCode(exception.StatusCode, new { code = exception.Code, message = exception.Message });
         }
     }
 

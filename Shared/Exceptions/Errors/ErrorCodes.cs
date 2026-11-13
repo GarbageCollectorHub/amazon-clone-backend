@@ -15,6 +15,7 @@
 
         // System
         public const string DatabaseError = "database.error";
+        public const string DatabaseUnavailable = "database.unavailable";
         public const string InternalError = "internal.error";
 
         // Rate limiting

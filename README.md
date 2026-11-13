@@ -12,7 +12,7 @@ The project was built by a team of three frontend and two backend developers usi
 
 The backend is hosted on Azure App Service with Azure SQL Database and Azure Blob Storage. The live demo includes the REST API and MVC admin panel. The React storefront is not hosted at this address.
 
-The first request may take longer after a period of inactivity. Use test data when trying the demo.
+If no one has used the demo for a while, the site may take longer to open. The first action that uses the database (for example, signing in) may be slow. The database can take about 30 seconds to wake up. If the action fails, wait a moment and try again. Use test data when trying the demo.
 
 ## My role
 
