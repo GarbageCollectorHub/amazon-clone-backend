@@ -1,4 +1,22 @@
 (function () {
+    const sidebarSignIn = document.getElementById("sidebar-sign-in");
+    sidebarSignIn?.addEventListener("click", function () {
+        const sidebar = document.getElementById("adminSidebar");
+        const modal = document.getElementById("authModal");
+        const drawer = bootstrap.Offcanvas.getInstance(sidebar);
+        const signIn = bootstrap.Modal.getOrCreateInstance(modal);
+
+        if (drawer && sidebar.classList.contains("show")) {
+            // Close the mobile menu before opening sign-in so the two dialogs don't compete for focus.
+            sidebar.addEventListener("hidden.bs.offcanvas", () => signIn.show(), { once: true });
+            drawer.hide();
+            modal.addEventListener("hidden.bs.modal", () => document.querySelector(".menu-button")?.focus(), { once: true });
+        } else {
+            signIn.show();
+            modal.addEventListener("hidden.bs.modal", () => sidebarSignIn.focus(), { once: true });
+        }
+    });
+
     const placeholder = document.body.dataset.imagePlaceholder;
     function usePlaceholder(image) {
         if (!placeholder || image.dataset.fallbackApplied === "true") return;

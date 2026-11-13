@@ -2,6 +2,7 @@
 @inject Microsoft.Extensions.Configuration.IConfiguration Configuration
 @{
     bool isAuthorized = Context.User.Identity?.IsAuthenticated == true;
+    bool isGuestDashboard = ViewData["GuestDashboard"] is true;
     string? userName = User.FindFirstValue(ClaimTypes.Email);
     string firstLetter = string.IsNullOrWhiteSpace(userName) ? "U" : userName[..1].ToUpperInvariant();
     string controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
@@ -33,7 +34,7 @@
         <link rel="stylesheet" href="~/css/product-gallery-editor.css" asp-append-version="true" />
         @await RenderSectionAsync("Styles", required: false)
     </head>
-    <body class="theme-scope" data-image-placeholder="@Url.Content("~/images/product-placeholder.svg")">
+    <body class="theme-scope@(isGuestDashboard ? " guest-dashboard" : "")" data-image-placeholder="@Url.Content("~/images/product-placeholder.svg")">
         <a class="skip-link" href="#main-content">Skip to content</a>
         <partial name="_AdminIcons" />
         <aside class="admin-sidebar offcanvas-lg offcanvas-start" id="adminSidebar" tabindex="-1" aria-label="Management navigation">
@@ -52,10 +53,20 @@
                         <svg class="icon" aria-hidden="true"><use href="#i-home" /></svg>
                         Dashboard
                     </a>
-                    <a class="sidebar-link@(Active("AdminProducts"))" asp-controller="AdminProducts" asp-action="Index" aria-current="@(controller == "AdminProducts" ? "page" : null)">
-                        <svg class="icon" aria-hidden="true"><use href="#i-box" /></svg>
-                        My products
-                    </a>
+                    @if (isGuestDashboard)
+                    {
+                        <button type="button" class="sidebar-link" id="sidebar-sign-in" aria-haspopup="dialog" aria-controls="authModal">
+                            <svg class="icon" aria-hidden="true"><use href="#i-package" /></svg>
+                            My products
+                        </button>
+                    }
+                    else
+                    {
+                        <a class="sidebar-link@(Active("AdminProducts"))" asp-controller="AdminProducts" asp-action="Index" aria-current="@(controller == "AdminProducts" ? "page" : null)">
+                            <svg class="icon" aria-hidden="true"><use href="#i-box" /></svg>
+                            My products
+                        </a>
+                    }
                     @if (User.IsInRole("Admin"))
                     {
                         <a class="sidebar-link@(Active("AdminBrands"))" asp-controller="AdminBrands" asp-action="Index" aria-current="@(controller == "AdminBrands" ? "page" : null)">
@@ -95,7 +106,7 @@
                 </nav>
             </div>
             <nav class="topbar-actions" aria-label="Account and display settings">
-                @if (Configuration.GetValue<bool>("Swagger:Enabled"))
+                @if (!isGuestDashboard && Configuration.GetValue<bool>("Swagger:Enabled"))
                 {
                     <a class="topbar-button api-docs-button" href="@Url.Content("~/swagger")" target="_blank" rel="noopener" title="Open Swagger API documentation" aria-label="API documentation (opens a new tab)">
                         <svg class="icon icon--small" aria-hidden="true"><use href="#i-code" /></svg>
@@ -122,7 +133,7 @@
                     else
                     {
                         <button type="button" class="topbar-button" data-bs-toggle="modal" data-bs-target="#authModal">Sign in</button>
-                        <a class="action-button action-button--secondary" asp-controller="Admin" asp-action="SignUp">Register</a>
+                        <a class="action-button action-button--secondary topbar-register" asp-controller="Admin" asp-action="SignUp">Register</a>
                     }
                 </div>
             </nav>

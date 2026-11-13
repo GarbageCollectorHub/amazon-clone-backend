@@ -1,6 +1,9 @@
 ﻿@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
 @{
     ViewData["Title"] = "Dashboard";
+    bool isGuest = User.Identity?.IsAuthenticated != true;
+    bool swaggerEnabled = Configuration.GetValue<bool>("Swagger:Enabled");
+    ViewData["GuestDashboard"] = isGuest;
 }
 @section Styles
 {
@@ -10,94 +13,114 @@
     <div class="management-page__header">
         <div>
             <h1 class="management-page__title">Admin dashboard</h1>
-            <p class="management-page__subtitle">Your products, catalog and management tools in one place.</p>
+            <p class="management-page__subtitle">@(isGuest && swaggerEnabled
+                ? "Manage your products and explore the AMZN API."
+                : "Your products, catalog and management tools in one place.")</p>
         </div>
     </div>
-    @if (Configuration.GetValue<bool>("Swagger:Enabled"))
+    @if (isGuest)
     {
-        <section class="api-overview" aria-labelledby="api-overview-title">
-            <div class="api-overview__icon" aria-hidden="true">
-                <svg class="icon"><use href="#i-code" /></svg>
-            </div>
-            <div class="api-overview__copy">
-                <h2 id="api-overview-title">Explore the AMZN API</h2>
-                <p>This admin panel manages the store catalog. The REST API serves the React storefront.</p>
-            </div>
-            <a class="action-button action-button--secondary api-docs-button" href="@Url.Content("~/swagger")" target="_blank" rel="noopener" aria-label="Open Swagger (opens a new tab)">
-                Open Swagger
-                <svg class="icon icon--small" aria-hidden="true"><use href="#i-external" /></svg>
-            </a>
-        </section>
-    }
-    @if (User.Identity?.IsAuthenticated != true)
-    {
-        <p class="dashboard-signin-note">
-            <button type="button" class="dashboard-signin-note__link" data-bs-toggle="modal" data-bs-target="#authModal">Sign in</button>
-            or <a asp-controller="Admin" asp-action="SignUp">create an account</a> to manage your products.
-            Admin accounts can also manage brands, categories and promotions.
-            <span class="d-block mt-2">
-                <strong class="text-body">Live demo:</strong> If no one has used the demo for a while, the first action that uses the database (for example, signing in) may be slow. The database can take about 30 seconds to wake up.
-                If it doesn't work, wait a moment and try again.
-            </span>
+        <div class="dashboard-guest-sections@(swaggerEnabled ? " dashboard-guest-sections--with-api" : "")">
+            <section class="dashboard-section" aria-labelledby="dashboard-products-title">
+                <h2 id="dashboard-products-title">Product management</h2>
+                <button type="button" class="dashboard-guest-link" data-bs-toggle="modal" data-bs-target="#authModal" aria-haspopup="dialog">
+                    <svg class="icon" aria-hidden="true"><use href="#i-package" /></svg>
+                    <span><strong>My products</strong><small>View, edit and restock your listings.</small></span>
+                    <svg class="icon dashboard-guest-link__arrow" aria-hidden="true"><use href="#i-chevron-right" /></svg>
+                </button>
+                <button type="button" class="dashboard-guest-link" data-bs-toggle="modal" data-bs-target="#authModal" aria-haspopup="dialog">
+                    <svg class="icon" aria-hidden="true"><use href="#i-plus-square" /></svg>
+                    <span><strong>Add product</strong><small>Create a new listing.</small></span>
+                    <svg class="icon dashboard-guest-link__arrow" aria-hidden="true"><use href="#i-chevron-right" /></svg>
+                </button>
+                <div class="dashboard-guest-access">
+                    <div class="dashboard-guest-access__row">
+                        <p>Sign in to manage your products.</p>
+                        <div class="dashboard-guest-access__actions">
+                            <button type="button" class="action-button action-button--primary" data-bs-toggle="modal" data-bs-target="#authModal" aria-haspopup="dialog">Sign in</button>
+                            <a asp-controller="Admin" asp-action="SignUp" class="dashboard-register">Create an account</a>
+                        </div>
+                    </div>
+                    <p class="dashboard-guest-access__note">Admins can also manage brands, categories and promotions.</p>
+                </div>
+            </section>
+            @if (swaggerEnabled)
+            {
+                <section class="dashboard-section dashboard-api" aria-labelledby="dashboard-api-title">
+                    <h2 id="dashboard-api-title">API documentation</h2>
+                    <p>Try the REST API used by the React storefront.</p>
+                    <a class="action-button action-button--secondary dashboard-swagger" href="@Url.Content("~/swagger")" target="_blank" rel="noopener" aria-label="Open Swagger (opens a new tab)">
+                        <svg class="icon icon--small" aria-hidden="true"><use href="#i-external" /></svg>
+                        Open Swagger
+                    </a>
+                </section>
+            }
+        </div>
+        <p class="dashboard-demo-note">
+            <svg class="icon icon--small" aria-hidden="true"><use href="#i-info" /></svg>
+            <span><strong>Live demo:</strong> If no one has used the demo for a while, the database may take about 30 seconds to start.</span>
         </p>
     }
-    <div class="dashboard-sections">
-        <section class="dashboard-section">
-            <h2>Product management</h2>
-            <p>Products and listings</p>
-            <a class="dashboard-link" asp-controller="AdminProducts" asp-action="Index">
-                <svg class="icon" aria-hidden="true"><use href="#i-box" /></svg>
-                <span>
-                    <strong>My products</strong>
-                    <small>Edit, restock or remove listings</small>
-                </span>
-            </a>
-            <a class="dashboard-link" asp-controller="AdminProducts" asp-action="Create">
-                <svg class="icon" aria-hidden="true"><use href="#i-plus" /></svg>
-                <span>
-                    <strong>Add product</strong>
-                    <small>Create a new product</small>
-                </span>
-            </a>
-        </section>
-        @if (User.IsInRole("Admin"))
-        {
+    else
+    {
+        <div class="dashboard-sections">
             <section class="dashboard-section">
-                <h2>Catalog</h2>
-                <p>Structure and metadata</p>
-                <a class="dashboard-link" asp-controller="AdminBrands" asp-action="Index">
-                    <svg class="icon" aria-hidden="true"><use href="#i-tag" /></svg>
+                <h2>Product management</h2>
+                <p>Products and listings</p>
+                <a class="dashboard-link" asp-controller="AdminProducts" asp-action="Index">
+                    <svg class="icon" aria-hidden="true"><use href="#i-box" /></svg>
                     <span>
-                        <strong>Brands</strong>
-                        <small>Manage product brands</small>
+                        <strong>My products</strong>
+                        <small>Edit, restock or remove listings</small>
                     </span>
                 </a>
-                <a class="dashboard-link" asp-controller="Admin" asp-action="Category">
-                    <svg class="icon" aria-hidden="true"><use href="#i-layers" /></svg>
+                <a class="dashboard-link" asp-controller="AdminProducts" asp-action="Create">
+                    <svg class="icon" aria-hidden="true"><use href="#i-plus" /></svg>
                     <span>
-                        <strong>Categories</strong>
-                        <small>Manage the category tree</small>
+                        <strong>Add product</strong>
+                        <small>Create a new product</small>
                     </span>
                 </a>
             </section>
-            <section class="dashboard-section">
-                <h2>Administration</h2>
-                <p>Access and promotions</p>
-                <a class="dashboard-link" asp-controller="Admin" asp-action="SignUp">
-                    <svg class="icon" aria-hidden="true"><use href="#i-user" /></svg>
-                    <span>
-                        <strong>Add user</strong>
-                        <small>Register an account</small>
-                    </span>
-                </a>
-                <a class="dashboard-link" asp-controller="Admin" asp-action="Promotions">
-                    <svg class="icon" aria-hidden="true"><use href="#i-promotion" /></svg>
-                    <span>
-                        <strong>Promotions</strong>
-                        <small>Create product or category discounts</small>
-                    </span>
-                </a>
-            </section>
-        }
-    </div>
+            @if (User.IsInRole("Admin"))
+            {
+                <section class="dashboard-section">
+                    <h2>Catalog</h2>
+                    <p>Structure and metadata</p>
+                    <a class="dashboard-link" asp-controller="AdminBrands" asp-action="Index">
+                        <svg class="icon" aria-hidden="true"><use href="#i-tag" /></svg>
+                        <span>
+                            <strong>Brands</strong>
+                            <small>Manage product brands</small>
+                        </span>
+                    </a>
+                    <a class="dashboard-link" asp-controller="Admin" asp-action="Category">
+                        <svg class="icon" aria-hidden="true"><use href="#i-layers" /></svg>
+                        <span>
+                            <strong>Categories</strong>
+                            <small>Manage the category tree</small>
+                        </span>
+                    </a>
+                </section>
+                <section class="dashboard-section">
+                    <h2>Administration</h2>
+                    <p>Access and promotions</p>
+                    <a class="dashboard-link" asp-controller="Admin" asp-action="SignUp">
+                        <svg class="icon" aria-hidden="true"><use href="#i-user" /></svg>
+                        <span>
+                            <strong>Add user</strong>
+                            <small>Register an account</small>
+                        </span>
+                    </a>
+                    <a class="dashboard-link" asp-controller="Admin" asp-action="Promotions">
+                        <svg class="icon" aria-hidden="true"><use href="#i-promotion" /></svg>
+                        <span>
+                            <strong>Promotions</strong>
+                            <small>Create product or category discounts</small>
+                        </span>
+                    </a>
+                </section>
+            }
+        </div>
+    }
 </div>
